@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fake Review Detector</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            background-attachment: fixed;
-            font-family: 'Roboto', sans-serif;
+            font-family: 'Inter', sans-serif;
             color: #333;
             margin: 0;
             padding: 0;
@@ -16,10 +16,21 @@
             overflow-x: hidden;
         }
 
-        /* Dark Mode */
+        /* Light Mode Background with Gradient and Streaks */
+        body.light-mode {
+            background: linear-gradient(120deg, #f3f4f7, #ffffff);
+            background-image: url('https://source.unsplash.com/collection/181581/1920x1080'), linear-gradient(135deg, rgba(243, 244, 247, 0.8), rgba(255, 255, 255, 0.8));
+            background-blend-mode: overlay;
+            background-size: cover;
+            color: #333;
+        }
+
+        /* Dark Mode Background - Hacker/Coder Aesthetic */
         body.dark-mode {
-            background: linear-gradient(135deg, #232526 0%, #414345 100%);
+            background: radial-gradient(circle, rgba(38, 50, 56, 1) 0%, rgba(18, 18, 18, 1) 100%);
             color: #ddd;
+            background-image: url('https://source.unsplash.com/1920x1080/?code,technology');
+            background-blend-mode: overlay;
         }
 
         header {
@@ -38,10 +49,23 @@
             font-size: 48px;
             margin: 0;
             letter-spacing: 2px;
+            animation: title-slide-in 1.5s ease-out;
         }
 
         .dark-mode header {
             background: rgba(30, 30, 30, 0.9);
+        }
+
+        /* Animated title slide-in */
+        @keyframes title-slide-in {
+            0% {
+                opacity: 0;
+                transform: translateX(-100%);
+            }
+            100% {
+                opacity: 1;
+                transform: translateX(0);
+            }
         }
 
         .nav {
@@ -97,26 +121,29 @@
             color: white;
         }
 
-        /* Hero Section */
+        /* Hero Section with Animation */
         .hero {
             position: relative;
             height: 100vh;
-            background: url('https://source.unsplash.com/random/1920x1080') no-repeat center center/cover;
+            background: url('https://source.unsplash.com/1920x1080/?futuristic,technology') no-repeat center center/cover;
             display: flex;
             justify-content: center;
             align-items: center;
             text-align: center;
             color: white;
+            animation: hero-fade-in 2s ease-out;
         }
 
         .hero h1 {
             font-size: 4em;
             margin: 0;
+            animation: text-slide-in 2s ease-out;
         }
 
         .hero p {
             font-size: 1.5em;
             margin: 20px 0;
+            animation: text-slide-in 2.5s ease-out;
         }
 
         .hero .cta {
@@ -127,16 +154,48 @@
             text-decoration: none;
             border-radius: 30px;
             transition: background-color 0.3s;
+            animation: button-slide-in 3s ease-out;
         }
 
         .hero .cta:hover {
             background: #ffd700;
         }
 
-        /* Parallax Scrolling */
+        @keyframes hero-fade-in {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes text-slide-in {
+            from {
+                opacity: 0;
+                transform: translateY(50%);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes button-slide-in {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* Parallax Section with Depth Effect */
         .parallax {
-            background-image: url('https://source.unsplash.com/random/1920x800');
-            min-height: 400px;
+            background-image: url('https://source.unsplash.com/1920x800/?digital,abstract');
+            min-height: 500px;
             background-attachment: fixed;
             background-position: center;
             background-repeat: no-repeat;
@@ -153,6 +212,7 @@
             border-radius: 15px;
             box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.3);
             transition: background-color 0.3s, box-shadow 0.3s;
+            animation: fadeInUp 1s ease-out;
         }
 
         .dark-mode .fake-review-form, .dark-mode .intro-video-container, 
@@ -160,6 +220,17 @@
             background: rgba(40, 40, 40, 0.9);
             color: #ddd;
             box-shadow: 0px 0px 15px rgba(255, 255, 255, 0.3);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .fake-review-form h2, .fake-review-form h3,
@@ -322,6 +393,7 @@
         // Dark Mode Toggle Functionality
         function toggleDarkMode() {
             document.body.classList.toggle('dark-mode');
+            document.body.classList.toggle('light-mode');
         }
 
         // Prevent page scroll up on form submission for the contribution section
@@ -339,7 +411,7 @@
         });
     </script>
 </head>
-<body>
+<body class="light-mode">
     <header>
         <h1>Fake Review Detector</h1>
         <button class="dark-mode-toggle" onclick="toggleDarkMode()">Toggle Dark Mode</button>
