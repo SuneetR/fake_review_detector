@@ -1,3 +1,5 @@
+# fake_review_detector.py
+
 import string
 import nltk
 from sklearn.pipeline import make_pipeline
@@ -17,8 +19,11 @@ nltk.download('wordnet')
 stop_words = set(stopwords.words('english'))
 lemmatizer = WordNetLemmatizer()
 
-# Load data from CSV file
-df = pd.read_csv('reviews.csv')
+# Load data from CSV file (Make sure the file exists and is correctly placed)
+try:
+    df = pd.read_csv('reviews.csv')
+except FileNotFoundError:
+    raise Exception("The file 'reviews.csv' was not found. Please make sure it's in the correct directory.")
 
 # Data preprocessing function
 def preprocess_text(text):
@@ -29,6 +34,10 @@ def preprocess_text(text):
 
 # Apply preprocessing to the dataset
 df['review'] = df['review'].apply(preprocess_text)
+
+# Ensure 'label' column is numeric (1 for fake, 0 for genuine)
+if not pd.api.types.is_numeric_dtype(df['label']):
+    df['label'] = df['label'].astype(int)
 
 # Split the dataset into training and test sets
 X = df['review']
@@ -65,7 +74,3 @@ def update_model(new_review, new_label):
     y_train = pd.concat([y_train, pd.Series(new_label)], ignore_index=True)
     # Retrain the model
     pipeline.fit(X_train, y_train)
-
-# Example usage
-print(predict_review("This product is amazing!"))
-update_model("Worst experience ever!", 1)
