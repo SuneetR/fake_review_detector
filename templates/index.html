@@ -6,51 +6,93 @@
     <title>Fake Review Detector</title>
     <style>
         body {
-            background-image: url('https://images.unsplash.com/photo-1534070189989-2a97c91800bb');
-            background-size: cover;
-            background-repeat: no-repeat;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             background-attachment: fixed;
             font-family: 'Arial', sans-serif;
             color: #333;
             margin: 0;
             padding: 0;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* Dark Mode */
+        body.dark-mode {
+            background: linear-gradient(135deg, #232526 0%, #414345 100%);
+            color: #ddd;
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            text-align: center;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.3);
+            transition: background-color 0.3s;
         }
 
         header h1 {
             color: #fff;
-            font-size: 60px;
-            padding: 40px 20px;
+            font-size: 50px;
             margin: 0;
-            text-align: center;
-            text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.7);
             letter-spacing: 2px;
-            background: linear-gradient(to right, #6a11cb, #2575fc);
-            border-radius: 10px;
-            margin-bottom: 30px;
+        }
+
+        .dark-mode header {
+            background: rgba(30, 30, 30, 0.9);
         }
 
         .nav {
-            padding: 20px;
-            text-align: center;
-            margin-bottom: 40px;
-            background-color: rgba(255, 255, 255, 0.8);
-            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            padding: 10px 0;
+            background-color: rgba(0, 0, 0, 0.8);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            transition: background-color 0.3s;
         }
 
-        a:link, a:visited {
-            background-color: rgba(255, 255, 255, 0.8);
-            color: black;
-            padding: 14px 25px;
-            text-align: center;
+        .nav a {
+            color: white;
             text-decoration: none;
-            display: inline-block;
-            border-radius: 10px;
-            margin: 0 3%;
+            padding: 10px 20px;
+            margin: 0 10px;
             font-size: 18px;
+            text-transform: uppercase;
+            transition: color 0.3s;
         }
 
-        .bookmarks:hover {
-            background-color: #2575fc;
+        .nav a:hover {
+            color: #ffd700;
+        }
+
+        .dark-mode .nav {
+            background-color: rgba(30, 30, 30, 0.9);
+        }
+
+        .dark-mode .nav a {
+            color: #ddd;
+        }
+
+        .dark-mode .nav a:hover {
+            color: #ff8c00;
+        }
+
+        /* Dark Mode Toggle Button */
+        .dark-mode-toggle {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: #ffd700;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .dark-mode .dark-mode-toggle {
+            background: #ff8c00;
             color: white;
         }
 
@@ -62,6 +104,13 @@
             width: 60%;
             border-radius: 15px;
             box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.3);
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+
+        .dark-mode .fake-review-form {
+            background: rgba(40, 40, 40, 0.9);
+            color: #ddd;
+            box-shadow: 0px 0px 15px rgba(255, 255, 255, 0.3);
         }
 
         .fake-review-form h2, .fake-review-form h3 {
@@ -71,17 +120,8 @@
             font-weight: bold;
         }
 
-        .fake-review-form p {
-            color: #666;
-            font-style: italic;
-            margin-bottom: 30px;
-        }
-
-        .fake-review-form label {
-            font-size: 18px;
-            font-weight: bold;
-            display: block;
-            margin-bottom: 10px;
+        .dark-mode .fake-review-form h2, .dark-mode .fake-review-form h3 {
+            color: #ddd;
         }
 
         .fake-review-form textarea {
@@ -93,6 +133,13 @@
             border: 1px solid #ccc;
             resize: none;
             text-align: center;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .dark-mode .fake-review-form textarea {
+            background-color: #333;
+            color: #ddd;
+            border-color: #444;
         }
 
         .fake-review-form input[type="submit"] {
@@ -103,10 +150,16 @@
             border-radius: 5px;
             cursor: pointer;
             font-size: 16px;
+            transition: background-color 0.3s;
         }
 
         .fake-review-form input[type="submit"]:hover {
             background-color: #45a049;
+        }
+
+        .dark-mode .fake-review-form input[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
         }
 
         .intro-video-container {
@@ -117,6 +170,13 @@
             width: 60%;
             border-radius: 15px;
             box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.3);
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+
+        .dark-mode .intro-video-container {
+            background: rgba(40, 40, 40, 0.9);
+            color: #ddd;
+            box-shadow: 0px 0px 15px rgba(255, 255, 255, 0.3);
         }
 
         .intro-video-container h3 {
@@ -125,11 +185,8 @@
             color: #2575fc;
         }
 
-        .intro-video-container iframe {
-            width: 100%;
-            height: 450px;
-            border: none;
-            border-radius: 10px;
+        .dark-mode .intro-video-container h3 {
+            color: #ffd700;
         }
 
         .team {
@@ -146,21 +203,33 @@
             border-radius: 10px;
             width: 25%;
             box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
+            transition: box-shadow 0.3s;
+            cursor: pointer;
+        }
+
+        .dark-mode .team-member {
+            background-color: #444;
+            color: #ddd;
+            box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.3);
+        }
+
+        .team-member:hover {
+            box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .dark-mode .team-member:hover {
+            box-shadow: 0px 0px 20px rgba(255, 255, 255, 0.5);
         }
 
         .team-member img {
             width: 100%;
             border-radius: 10px;
             margin-bottom: 15px;
+            transition: transform 0.3s;
         }
 
-        .team-member h3 {
-            margin: 10px 0;
-            font-size: 22px;
-        }
-
-        .team-member p {
-            font-size: 16px;
+        .team-member:hover img {
+            transform: scale(1.05);
         }
 
         .suggestions, .contribute {
@@ -171,33 +240,13 @@
             width: 60%;
             border-radius: 15px;
             box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.3);
+            transition: background-color 0.3s, box-shadow 0.3s;
         }
 
-        .suggestions h2, .contribute h2 {
-            color: #333;
-            margin-bottom: 20px;
-            font-size: 28px;
-            font-weight: bold;
-        }
-
-        .contribute input[type="file"] {
-            font-size: 16px;
-            margin-bottom: 20px;
-        }
-
-        .contribute textarea {
-            width: 80%;
-            padding: 15px;
-            font-size: 16px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-            resize: none;
-            text-align: center;
-        }
-
-        .contribute input[type="radio"] {
-            margin: 0 10px;
+        .dark-mode .suggestions, .dark-mode .contribute {
+            background: rgba(40, 40, 40, 0.9);
+            color: #ddd;
+            box-shadow: 0px 0px 15px rgba(255, 255, 255, 0.3);
         }
 
         .suggestions input[type="submit"], .contribute input[type="submit"] {
@@ -208,6 +257,7 @@
             border-radius: 5px;
             cursor: pointer;
             font-size: 16px;
+            transition: background-color 0.3s;
         }
 
         .suggestions input[type="submit"]:hover, .contribute input[type="submit"]:hover {
@@ -228,8 +278,29 @@
             font-size: 18px;
             color: white;
         }
+
+        .dark-mode .contact-info {
+            color: #ddd;
+        }
+
+        /* Animation */
+        .fade-in {
+            opacity: 0;
+            animation: fadeIn ease 2s;
+            animation-fill-mode: forwards;
+        }
+
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
     </style>
     <script>
+        // Dark Mode Toggle Functionality
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+        }
+
         // Prevent page scroll up on form submission for the contribution section
         function handleFormSubmit(event, formId) {
             event.preventDefault();
@@ -238,15 +309,21 @@
             responseMessage.style.display = 'block';
             form.reset(); // Clear the form
         }
+
+        // Fade in on load
+        document.addEventListener("DOMContentLoaded", function() {
+            document.body.classList.add("fade-in");
+        });
     </script>
 </head>
 <body>
     <header>
         <h1>Fake Review Detector</h1>
+        <button class="dark-mode-toggle" onclick="toggleDarkMode()">Toggle Dark Mode</button>
     </header>
 
     <div class="nav">
-        <a href="" class="bookmarks">Home</a>
+        <a href="#home" class="bookmarks">Home</a>
         <a href="#intro" class="bookmarks">Know More</a>
         <a href="#team" class="bookmarks">Our Team</a>
         <a href="#contact" class="bookmarks">Contact</a>
