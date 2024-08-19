@@ -23,7 +23,7 @@
 
         /* Dark Mode Background */
         body.dark-mode {
-            background: linear-gradient(to bottom, #0f2027, #203a43, #2c5364); /* Space-themed gradient */
+            background: linear-gradient(to bottom, #0f2027, #203a43, #2c5364);
             color: #ddd;
         }
 
@@ -442,7 +442,6 @@
         .back-to-top:hover {
             background: #ffd700;
         }
-
     </style>
     <script>
         // Dark Mode Toggle Functionality
@@ -479,6 +478,26 @@
             responseMessage.style.display = 'block';
             form.reset(); // Clear the form
         }
+
+        // Handle Analyze Review submission via JavaScript
+        document.addEventListener('DOMContentLoaded', function() {
+            const reviewForm = document.querySelector('#fake-review-form form');
+            reviewForm.onsubmit = async function(event) {
+                event.preventDefault();
+
+                const formData = new FormData(reviewForm);
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                const result = await response.json();
+                document.querySelector('.result-container h2').innerText = `Prediction: ${result.prediction}`;
+                document.querySelector('.result-container h3').innerText = `Confidence: ${result.confidence}%`;
+                document.querySelector('.pie-chart').style.backgroundImage = `conic-gradient(#4CAF50 0% ${result.confidence}%, #f44336 ${result.confidence}% 100%)`;
+                document.querySelector('.pie-chart').innerText = `${result.confidence}%`;
+            };
+        });
     </script>
 </head>
 <body class="light-mode">
@@ -500,17 +519,15 @@
     <div id="fake-review-form" class="fake-review-form">
         <div class="form-container">
             <h2>Fake Review Detector</h2>
-            <form action="/predict" method="post" onsubmit="return false;">
+            <form id="reviewForm">
                 <textarea name="review" rows="5" cols="40" placeholder="Enter a review..."></textarea><br>
                 <input type="submit" value="Analyze Review">
             </form>
-            {% if prediction %}
-                <div class="result-container">
-                    <h2>Prediction: {{ prediction }}</h2>
-                    <div class="pie-chart">{{ confidence }}%</div>
-                    <h3>Confidence: {{ confidence }}%</h3>
-                </div>
-            {% endif %}
+            <div class="result-container">
+                <h2>Prediction: N/A</h2>
+                <div class="pie-chart">0%</div>
+                <h3>Confidence: 0%</h3>
+            </div>
         </div>
     </div>
 
