@@ -3,21 +3,17 @@ import nltk
 from sklearn.pipeline import make_pipeline
 from sklearn.linear_model import LogisticRegression
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.model_selection import train_test_split, cross_val_score
-from sklearn.metrics import classification_report
+from sklearn.model_selection import train_test_split
 import pandas as pd
 import numpy as np
-from sklearn.externals import joblib
-from sklearn.utils import shuffle
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
 
 # Download necessary NLTK resources
 nltk.download('stopwords')
 nltk.download('wordnet')
-nltk.download('omw-1.4')
 
-from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
-
+# Initialize NLTK components
 stop_words = set(stopwords.words('english'))
 lemmatizer = WordNetLemmatizer()
 
@@ -34,9 +30,6 @@ def preprocess_text(text):
 # Apply preprocessing to the dataset
 df['review'] = df['review'].apply(preprocess_text)
 
-# Shuffle the dataset to ensure randomness
-df = shuffle(df, random_state=42)
-
 # Split the dataset into training and test sets
 X = df['review']
 y = df['label']
@@ -45,20 +38,11 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 # Create a pipeline with TfidfVectorizer and LogisticRegression
 pipeline = make_pipeline(
     TfidfVectorizer(),
-    LogisticRegression(solver='liblinear', C=1.0, random_state=42)  # Using liblinear solver for small datasets
+    LogisticRegression(solver='liblinear', C=1.0, random_state=42)
 )
 
-# Train the model with cross-validation
-cv_scores = cross_val_score(pipeline, X_train, y_train, cv=5)
-print(f'Cross-validation accuracy: {np.mean(cv_scores):.2f} ± {np.std(cv_scores):.2f}')
-
+# Train the model
 pipeline.fit(X_train, y_train)
-
-# Save the model to disk
-joblib.dump(pipeline, 'review_model.pkl')
-
-# Load the model (this would be used when deploying the model)
-pipeline = joblib.load('review_model.pkl')
 
 # Function to predict if a review is fake or genuine
 def predict_review(review):
@@ -77,12 +61,10 @@ def update_model(new_review, new_label):
     # Preprocess the new review
     preprocessed_review = preprocess_text(new_review)
     # Append new data to the training set
-    X_train = X_train.append(pd.Series(preprocessed_review), ignore_index=True)
-    y_train = y_train.append(pd.Series(new_label), ignore_index=True)
+    X_train = pd.concat([X_train, pd.Series(preprocessed_review)], ignore_index=True)
+    y_train = pd.concat([y_train, pd.Series(new_label)], ignore_index=True)
     # Retrain the model
     pipeline.fit(X_train, y_train)
-    # Save the updated model
-    joblib.dump(pipeline, 'review_model.pkl')
 
 # Example usage
 print(predict_review("This product is amazing!"))
