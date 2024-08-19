@@ -497,9 +497,7 @@
             {% if prediction %}
             <div class="result-container">
                 <h2>Prediction: {{ prediction }}</h2>
-                <div class="pie-chart" style="background-image: conic-gradient(#4CAF50 0% {{confidence}}%, #f44336 {{confidence}}% 100%);">{{ confidence }}%</div>
-                <h3>Confidence: {{ confidence }}%</h3>
-            </div>
+                <h3>Accuracy: {{ confidence }}</h3>
             {% endif %}
         </div>
     </div>
