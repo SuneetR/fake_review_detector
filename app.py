@@ -1,5 +1,5 @@
 from flask import Flask, request, render_template, redirect, url_for
-from fake_review_detector import predict_review
+from fake_review_detector import predict_review, update_model  # Import the update_model function
 import os
 
 app = Flask(__name__)
@@ -40,7 +40,12 @@ def submit_review():
     review = request.form['review']
     review_type = request.form['review-type']
     store_review(review, review_type)
-    print(f"Received review: {review}, Type: {review_type}")
+    
+    # Update the model with the new review and its type
+    new_label = 1 if review_type.lower() == 'fake' else 0
+    update_model(review, new_label)
+    print(f"Received review: {review}, Type: {review_type}, Model Updated")
+    
     return redirect(url_for('home'))
 
 if __name__ == '__main__':
