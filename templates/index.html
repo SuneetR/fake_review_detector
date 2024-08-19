@@ -15,15 +15,15 @@
             overflow-x: hidden;
         }
 
-        /* Light Mode Background: Sleek Blue Gradient with Particle Effect */
+        /* Light Mode Background: Soft Gradient with a clean look */
         body.light-mode {
-            background: linear-gradient(135deg, #89CFF0, #add8e6);
+            background: linear-gradient(135deg, #f2f2f2, #e0e0e0);
             color: #333;
         }
 
-        /* Dark Mode Background: Cyberpunk Theme with Neon Accents */
+        /* Dark Mode Background: High-contrast Cyberpunk Neon Glow */
         body.dark-mode {
-            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            background: linear-gradient(135deg, #141E30, #243B55);
             color: #ddd;
         }
 
@@ -31,14 +31,14 @@
             position: sticky;
             top: 0;
             z-index: 1000;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.85);
             padding: 20px;
             text-align: center;
             box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.3);
         }
 
         header h1 {
-            color: #fff;
+            color: #FFD700;
             font-size: 48px;
             margin: 0;
             letter-spacing: 2px;
@@ -48,12 +48,12 @@
             position: absolute;
             top: 15px;
             right: 20px;
-            background: #ffd700;
+            background: #FFD700;
             border: none;
             padding: 10px 15px;
             border-radius: 20px;
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: background-color 0.3s, color 0.3s;
         }
 
         .dark-mode .dark-mode-toggle {
@@ -61,7 +61,7 @@
             color: white;
         }
 
-        /* Form Section */
+        /* Main Form Section */
         .form-container {
             background: rgba(255, 255, 255, 0.9);
             padding: 40px;
@@ -101,6 +101,24 @@
             background-color: #45a049;
         }
 
+        /* Video Section */
+        .video-container {
+            text-align: center;
+            margin: 40px auto;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            width: 60%;
+            border-radius: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .video-container iframe {
+            width: 100%;
+            height: 400px;
+            border-radius: 10px;
+            border: none;
+        }
+
         /* Team Section */
         .team {
             background: #2c3e50;
@@ -110,6 +128,9 @@
             border-radius: 20px;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
             color: white;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
         }
 
         .team-member {
@@ -117,31 +138,33 @@
             padding: 20px;
             margin: 20px;
             border-radius: 10px;
-            width: 30%;
             box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.3);
             transition: box-shadow 0.3s;
-            cursor: pointer;
             overflow: hidden;
             position: relative;
             text-align: center;
+            display: flex;
+            width: 45%;
         }
 
         .team-member img {
-            width: 100%;
+            width: 50%;
             border-radius: 10px;
-            margin-bottom: 15px;
+            margin-right: 15px;
             transition: transform 0.3s;
         }
 
         .team-member h3 {
             margin: 0;
             font-size: 24px;
+            text-align: left;
         }
 
         .team-member p {
             font-size: 16px;
             margin-top: 10px;
             line-height: 1.5;
+            text-align: left;
         }
 
         .team-member:hover {
@@ -263,6 +286,10 @@
             background-color: #45a049;
         }
 
+        .response-message {
+            display: none;
+        }
+
         /* Footer */
         footer {
             background-color: #333;
@@ -273,7 +300,7 @@
         }
 
         footer a {
-            color: #ffd700;
+            color: #FFD700;
             text-decoration: none;
             margin: 0 10px;
             font-size: 14px;
@@ -281,6 +308,20 @@
 
         footer a:hover {
             color: #ff8c00;
+        }
+
+        /* Background particles effect */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            background: url('https://www.transparenttextures.com/patterns/cubes.png');
+            opacity: 0.2;
+            z-index: -1;
         }
     </style>
     <script>
@@ -325,23 +366,42 @@
         {% endif %}
     </div>
 
+    <!-- Video Section -->
+    <div class="video-container">
+        <h2>Project Introduction & Explanation</h2>
+        <iframe src="https://www.youtube.com/embed/oy5w4x1fJLs" frameborder="0" allowfullscreen></iframe>
+    </div>
+
     <!-- Team Section -->
     <div class="team" id="team">
         <h2>Meet Our Team</h2>
         <div class="team-member">
             <img src="https://randomuser.me/api/portraits/men/1.jpg" alt="Team Member 1">
-            <h3>Suneet Rohra</h3>
-            <p>Suneet is the visionary leader behind the Fake Review Detector. With a passion for AI and a knack for innovation, he leads the team in creating groundbreaking solutions.</p>
+            <div>
+                <h3>Suneet Rohra</h3>
+                <p>Suneet is the visionary leader behind the Fake Review Detector. With a passion for AI and a knack for innovation, he leads the team in creating groundbreaking solutions.</p>
+            </div>
         </div>
         <div class="team-member">
             <img src="https://randomuser.me/api/portraits/men/2.jpg" alt="Team Member 2">
-            <h3>Pavan Modha</h3>
-            <p>Pavan, our designer, ensures that our platform not only works efficiently but also looks stunning. His attention to detail and creative flair make every user experience exceptional.</p>
+            <div>
+                <h3>Pavan Modha</h3>
+                <p>Pavan, our designer, ensures that our platform not only works efficiently but also looks stunning. His attention to detail and creative flair make every user experience exceptional.</p>
+            </div>
         </div>
         <div class="team-member">
             <img src="https://randomuser.me/api/portraits/women/3.jpg" alt="Team Member 3">
-            <h3>Sharanya Holla</h3>
-            <p>Sharanya is our lead researcher, diving deep into data to fine-tune our algorithms. Her expertise in machine learning drives the accuracy of our predictions.</p>
+            <div>
+                <h3>Sharanya Holla</h3>
+                <p>Sharanya is our lead researcher, diving deep into data to fine-tune our algorithms. Her expertise in machine learning drives the accuracy of our predictions.</p>
+            </div>
+        </div>
+        <div class="team-member">
+            <img src="https://randomuser.me/api/portraits/men/4.jpg" alt="Team Member 4">
+            <div>
+                <h3>New Analyst</h3>
+                <p>Our new analyst brings a fresh perspective to our data analysis team, ensuring that our models are optimized for the best possible performance.</p>
+            </div>
         </div>
     </div>
 
@@ -362,7 +422,7 @@
             <label for="contribute-review">Upload a review file (optional):</label><br><br>
             <input type="file" name="contribute-review"><br><br>
             <label for="review">Or enter a review:</label><br><br>
-            <textarea name="review" rows="5" cols="40" required></textarea><br><br>
+            <textarea name="review" rows="5" cols="40"></textarea><br><br>
             <label for="review-type">Do you think this review is:</label>
             <div class="radio-group">
                 <input type="radio" name="review-type" value="true" required> True
@@ -380,4 +440,3 @@
     </footer>
 </body>
 </html>
-
