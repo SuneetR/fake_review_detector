@@ -8,11 +8,12 @@
         body {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             background-attachment: fixed;
-            font-family: 'Arial', sans-serif;
+            font-family: 'Roboto', sans-serif;
             color: #333;
             margin: 0;
             padding: 0;
             transition: background-color 0.3s, color 0.3s;
+            overflow-x: hidden;
         }
 
         /* Dark Mode */
@@ -26,7 +27,7 @@
             top: 0;
             z-index: 1000;
             background: rgba(0, 0, 0, 0.8);
-            padding: 10px;
+            padding: 20px;
             text-align: center;
             box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.3);
             transition: background-color 0.3s;
@@ -34,7 +35,7 @@
 
         header h1 {
             color: #fff;
-            font-size: 50px;
+            font-size: 48px;
             margin: 0;
             letter-spacing: 2px;
         }
@@ -55,7 +56,7 @@
         .nav a {
             color: white;
             text-decoration: none;
-            padding: 10px 20px;
+            padding: 15px 20px;
             margin: 0 10px;
             font-size: 18px;
             text-transform: uppercase;
@@ -96,35 +97,86 @@
             color: white;
         }
 
-        .fake-review-form {
+        /* Hero Section */
+        .hero {
+            position: relative;
+            height: 100vh;
+            background: url('https://source.unsplash.com/random/1920x1080') no-repeat center center/cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: white;
+        }
+
+        .hero h1 {
+            font-size: 4em;
+            margin: 0;
+        }
+
+        .hero p {
+            font-size: 1.5em;
+            margin: 20px 0;
+        }
+
+        .hero .cta {
+            background: #ff8c00;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            color: white;
+            text-decoration: none;
+            border-radius: 30px;
+            transition: background-color 0.3s;
+        }
+
+        .hero .cta:hover {
+            background: #ffd700;
+        }
+
+        /* Parallax Scrolling */
+        .parallax {
+            background-image: url('https://source.unsplash.com/random/1920x800');
+            min-height: 400px;
+            background-attachment: fixed;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+
+        /* Advanced Features Sections */
+        .fake-review-form, .intro-video-container, .team, .suggestions, .contribute {
             text-align: center;
             margin: 40px auto;
             padding: 30px;
             background: rgba(255, 255, 255, 0.9);
-            width: 60%;
+            width: 70%;
             border-radius: 15px;
             box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.3);
             transition: background-color 0.3s, box-shadow 0.3s;
         }
 
-        .dark-mode .fake-review-form {
+        .dark-mode .fake-review-form, .dark-mode .intro-video-container, 
+        .dark-mode .suggestions, .dark-mode .contribute {
             background: rgba(40, 40, 40, 0.9);
             color: #ddd;
             box-shadow: 0px 0px 15px rgba(255, 255, 255, 0.3);
         }
 
-        .fake-review-form h2, .fake-review-form h3 {
+        .fake-review-form h2, .fake-review-form h3,
+        .intro-video-container h3, .suggestions h2, .contribute h2 {
             color: #333;
             margin-bottom: 20px;
             font-size: 28px;
             font-weight: bold;
         }
 
-        .dark-mode .fake-review-form h2, .dark-mode .fake-review-form h3 {
+        .dark-mode .fake-review-form h2, .dark-mode .fake-review-form h3,
+        .dark-mode .intro-video-container h3, .dark-mode .suggestions h2, 
+        .dark-mode .contribute h2 {
             color: #ddd;
         }
 
-        .fake-review-form textarea {
+        .fake-review-form textarea, .contribute textarea {
             width: 80%;
             padding: 15px;
             font-size: 16px;
@@ -136,13 +188,15 @@
             transition: background-color 0.3s, color 0.3s;
         }
 
-        .dark-mode .fake-review-form textarea {
+        .dark-mode .fake-review-form textarea, 
+        .dark-mode .contribute textarea {
             background-color: #333;
             color: #ddd;
             border-color: #444;
         }
 
-        .fake-review-form input[type="submit"] {
+        .fake-review-form input[type="submit"], .contribute input[type="submit"], 
+        .suggestions input[type="submit"] {
             background-color: #4CAF50;
             color: white;
             padding: 12px 30px;
@@ -153,30 +207,16 @@
             transition: background-color 0.3s;
         }
 
-        .fake-review-form input[type="submit"]:hover {
+        .fake-review-form input[type="submit"]:hover, .contribute input[type="submit"]:hover, 
+        .suggestions input[type="submit"]:hover {
             background-color: #45a049;
         }
 
-        .dark-mode .fake-review-form input[type="submit"] {
+        .dark-mode .fake-review-form input[type="submit"], 
+        .dark-mode .contribute input[type="submit"], 
+        .dark-mode .suggestions input[type="submit"] {
             background-color: #4CAF50;
             color: white;
-        }
-
-        .intro-video-container {
-            text-align: center;
-            margin: 40px auto;
-            padding: 30px;
-            background: rgba(255, 255, 255, 0.9);
-            width: 60%;
-            border-radius: 15px;
-            box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.3);
-            transition: background-color 0.3s, box-shadow 0.3s;
-        }
-
-        .dark-mode .intro-video-container {
-            background: rgba(40, 40, 40, 0.9);
-            color: #ddd;
-            box-shadow: 0px 0px 15px rgba(255, 255, 255, 0.3);
         }
 
         .intro-video-container h3 {
@@ -190,21 +230,23 @@
         }
 
         .team {
-            text-align: center;
-            margin: 40px auto;
             display: flex;
             justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 50px;
         }
 
         .team-member {
             background-color: #fef68a;
             padding: 20px;
-            margin: 0 10px;
+            margin: 10px;
             border-radius: 10px;
-            width: 25%;
+            width: 30%;
             box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
             transition: box-shadow 0.3s;
             cursor: pointer;
+            overflow: hidden;
+            position: relative;
         }
 
         .dark-mode .team-member {
@@ -232,46 +274,6 @@
             transform: scale(1.05);
         }
 
-        .suggestions, .contribute {
-            text-align: center;
-            margin: 40px auto;
-            padding: 30px;
-            background: rgba(255, 255, 255, 0.9);
-            width: 60%;
-            border-radius: 15px;
-            box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.3);
-            transition: background-color 0.3s, box-shadow 0.3s;
-        }
-
-        .dark-mode .suggestions, .dark-mode .contribute {
-            background: rgba(40, 40, 40, 0.9);
-            color: #ddd;
-            box-shadow: 0px 0px 15px rgba(255, 255, 255, 0.3);
-        }
-
-        .suggestions input[type="submit"], .contribute input[type="submit"] {
-            background-color: #4CAF50;
-            color: white;
-            padding: 12px 30px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s;
-        }
-
-        .suggestions input[type="submit"]:hover, .contribute input[type="submit"]:hover {
-            background-color: #45a049;
-        }
-
-        .contribute .response-message {
-            margin-top: 20px;
-            color: #4CAF50;
-            font-size: 20px;
-            font-weight: bold;
-            display: none;
-        }
-
         .contact-info {
             text-align: center;
             margin-top: 40px;
@@ -281,6 +283,26 @@
 
         .dark-mode .contact-info {
             color: #ddd;
+        }
+
+        /* Footer */
+        footer {
+            background-color: #333;
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        footer a {
+            color: #ffd700;
+            text-decoration: none;
+            margin: 0 10px;
+            font-size: 14px;
+        }
+
+        footer a:hover {
+            color: #ff8c00;
         }
 
         /* Animation */
@@ -294,6 +316,7 @@
             0% { opacity: 0; }
             100% { opacity: 1; }
         }
+
     </style>
     <script>
         // Dark Mode Toggle Functionality
@@ -322,15 +345,20 @@
         <button class="dark-mode-toggle" onclick="toggleDarkMode()">Toggle Dark Mode</button>
     </header>
 
-    <div class="nav">
-        <a href="#home" class="bookmarks">Home</a>
-        <a href="#intro" class="bookmarks">Know More</a>
-        <a href="#team" class="bookmarks">Our Team</a>
-        <a href="#contact" class="bookmarks">Contact</a>
-    </div>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div>
+            <h1>Identify Fake Reviews Instantly</h1>
+            <p>Join us in making online reviews trustworthy again.</p>
+            <a href="#fake-review-form" class="cta">Get Started</a>
+        </div>
+    </section>
+
+    <!-- Parallax Section -->
+    <div class="parallax"></div>
 
     <!-- Fake Review Detector Form -->
-    <div class="fake-review-form">
+    <div id="fake-review-form" class="fake-review-form">
         <h2>Fake Review Detector</h2>
         <form action="/predict" method="post">
             <label for="review">Enter a review:</label><br><br>
@@ -397,7 +425,12 @@
         </form>
     </div>
 
-    <!-- Contact Information -->
+    <!-- Footer Section -->
+    <footer>
+        <p>&copy; 2024 Fake Review Detector. All Rights Reserved.</p>
+        <p>Contact Email: <a href="mailto:TeamAlpha_fakereviewdetector@gmail.com">TeamAlpha_fakereviewdetector@gmail.com</a></p>
+    </footer>
+
     <div class="contact-info">
         <p>Contact Email: <a href="mailto:TeamAlpha_fakereviewdetector@gmail.com" style="color: #ffffff; text-decoration: underline;">TeamAlpha_fakereviewdetector@gmail.com</a></p>
     </div>
