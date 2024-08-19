@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -83,13 +84,9 @@
             margin-bottom: 10px;
         }
 
-        .fake-review-form textarea {
-            width: 100%;
-            padding: 15px;
+        .fake-review-form input[type="file"] {
             font-size: 16px;
             margin-bottom: 20px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
         }
 
         .fake-review-form input[type="submit"] {
@@ -106,28 +103,28 @@
             background-color: #45a049;
         }
 
-        .intro {
+        .fake-review-form .response-message {
+            margin-top: 20px;
+            color: #4CAF50;
+            font-size: 20px;
+            font-weight: bold;
+            display: none;
+        }
+
+        .intro-video-container {
             text-align: center;
-            margin: 20px auto;
-            padding: 25px;
+            margin: 40px auto;
+            padding: 30px;
             background: rgba(255, 255, 255, 0.9);
             width: 60%;
             border-radius: 15px;
             box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.3);
-            font-size: 20px;
-            font-weight: bold;
         }
 
-        .intro h3 {
+        .intro-video-container h3 {
             margin-bottom: 15px;
             font-size: 24px;
             color: #2575fc;
-        }
-
-        .video {
-            text-align: center;
-            margin: 40px auto;
-            padding: 20px;
         }
 
         .team {
@@ -208,6 +205,17 @@
             color: white;
         }
     </style>
+    <script>
+        // Prevent page scroll up on form submission
+        function handleFormSubmit(event, formId) {
+            event.preventDefault();
+            const form = document.getElementById(formId);
+            // Show a confirmation message after submission
+            const responseMessage = form.querySelector('.response-message');
+            responseMessage.style.display = 'block';
+            form.reset(); // Clear the form
+        }
+    </script>
 </head>
 <body>
     <header>
@@ -225,26 +233,22 @@
     <div class="fake-review-form">
         <h2>Fake Review Detector</h2>
         <p>(This is our beta version, currently under development)</p>
-        <form action="/predict" method="post">
-            <label for="review">Enter a review:</label><br><br>
-            <textarea name="review" rows="5" cols="40"></textarea><br><br>
+        <form id="fakeReviewForm" onsubmit="handleFormSubmit(event, 'fakeReviewForm')" action="/submit_review" method="post">
+            <label for="review">Upload a review file:</label><br><br>
+            <input type="file" name="review" required><br><br>
+            <label for="review-type">Do you think this review is:</label><br><br>
+            <input type="radio" name="review-type" value="true" required> True
+            <input type="radio" name="review-type" value="false" required> False<br><br>
             <input type="submit" value="Submit">
+            <p class="response-message">Thank you! We have received your review.</p>
         </form>
-        {% if prediction %}
-        <h2>Prediction: {{ prediction }}</h2>
-        <h3>Confidence: {{ confidence }}</h3>
-        {% endif %}
     </div>
 
-    <!-- Introduction Section -->
-    <div class="intro" id="intro">
+    <!-- Combined Introduction and Video Section -->
+    <div class="intro-video-container">
         <h3>Know More About Our Project</h3>
         <p>We aim to identify fake reviews using advanced machine learning algorithms. Join us on our journey to make online reviews trustworthy.</p>
-    </div>
-
-    <!-- Video Section -->
-    <div class="video">
-        <iframe width="75%" height="50%" src="https://www.youtube.com/embed/watch?v=1bG_uXkjhGM"></iframe>
+        <iframe width="75%" height="50%" src="https://youtu.be/xvFZjo5PgG0?si=09OzmdQN09CDqK9U"></iframe>
     </div>
 
     <!-- Team Section -->
@@ -271,9 +275,10 @@
     <!-- Suggestions Section -->
     <div class="suggestions">
         <h2>Do You Have Any Suggestions for Us to Improve?</h2>
-        <form action="/submit_feedback" method="post">
-            <textarea name="feedback" rows="5" cols="40" placeholder="We'd love to hear your thoughts!"></textarea><br><br>
+        <form id="suggestionForm" onsubmit="handleFormSubmit(event, 'suggestionForm')" action="/submit_feedback" method="post">
+            <textarea name="feedback" rows="5" cols="40" placeholder="We'd love to hear your thoughts!" required></textarea><br><br>
             <input type="submit" value="Submit">
+            <p class="response-message">Thank you! We have received your feedback.</p>
         </form>
     </div>
 
@@ -281,9 +286,10 @@
     <div class="contribute">
         <h2>Want to Contribute to Our Project?</h2>
         <p>Submit a review you believe is true or false, and help us improve our model!</p>
-        <form action="/submit_review" method="post">
-            <textarea name="review" rows="5" cols="40" placeholder="Submit a review you feel strongly about"></textarea><br><br>
+        <form id="contributionForm" onsubmit="handleFormSubmit(event, 'contributionForm')" action="/submit_review" method="post">
+            <textarea name="review" rows="5" cols="40" placeholder="Submit a review you feel strongly about" required></textarea><br><br>
             <input type="submit" value="Submit">
+            <p class="response-message">Thank you! We have received your review.</p>
         </form>
     </div>
 
@@ -293,5 +299,6 @@
     </div>
 </body>
 </html>
+
 
 
