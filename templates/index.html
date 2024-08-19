@@ -23,7 +23,7 @@
 
         /* Dark Mode Background */
         body.dark-mode {
-            background: url('https://source.unsplash.com/1920x1080/?stars,space') no-repeat center center fixed;
+            background: linear-gradient(to bottom, #0f2027, #203a43, #2c5364); /* Space-themed gradient */
             background-size: cover;
             color: #ddd;
         }
@@ -96,7 +96,7 @@
             color: white;
         }
 
-        /* Hero Section with Starry Background */
+        /* Hero Section */
         .hero {
             position: relative;
             height: 100vh;
@@ -134,10 +134,6 @@
 
         .hero .cta:hover {
             background: #ffd700;
-        }
-
-        .hero .cta:focus {
-            display: none;
         }
 
         /* Fake Review Detector Section */
@@ -200,7 +196,7 @@
             height: 150px;
             margin: auto;
             position: relative;
-            background: conic-gradient(#4CAF50 0% 75%, #f39c12 75% 100%);
+            background: conic-gradient(#4CAF50 0%, #4CAF50 50%, #f39c12 50% 100%);
             border-radius: 50%;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
         }
@@ -221,6 +217,15 @@
             font-size: 1.2em;
             font-weight: bold;
             color: #333;
+        }
+
+        .meter-labels {
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        .meter-labels span {
+            margin-right: 10px;
         }
 
         /* Introduction Video Section */
@@ -458,6 +463,22 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
+        // Remove hero section on clicking "Get Started"
+        function removeHeroSection() {
+            document.querySelector('.hero').style.display = 'none';
+            document.getElementById('fake-review-form').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Update Genuineness Meter dynamically
+        function updateGenuinenessMeter(confidence) {
+            const meter = document.querySelector('.genuineness-meter');
+            const center = document.querySelector('.meter-center');
+            const percentage = confidence > 100 ? 100 : confidence;
+
+            meter.style.background = `conic-gradient(#4CAF50 0% ${percentage}%, #f39c12 ${percentage}% 100%)`;
+            center.innerText = `${percentage}%`;
+        }
+
         // Prevent page scroll up on form submission for the contribution section
         function handleFormSubmit(event, formId) {
             event.preventDefault();
@@ -471,6 +492,14 @@
         document.addEventListener("DOMContentLoaded", function() {
             document.body.classList.add("fade-in");
         });
+
+        // Fake example usage
+        // Example usage of the Genuineness Meter update function after getting the prediction
+        document.addEventListener("DOMContentLoaded", function() {
+            // Example: Update to 75% confidence
+            updateGenuinenessMeter(75);
+        });
+
     </script>
 </head>
 <body class="light-mode">
@@ -484,7 +513,7 @@
         <div class="content">
             <h1>Identify Fake Reviews Instantly</h1>
             <p>Join us in making online reviews trustworthy again.</p>
-            <a href="#fake-review-form" class="cta" onclick="this.style.display='none'">Get Started</a>
+            <a href="#fake-review-form" class="cta" onclick="removeHeroSection()">Get Started</a>
         </div>
     </section>
 
@@ -492,7 +521,7 @@
     <div id="fake-review-form" class="fake-review-form">
         <div class="form-container">
             <h2>Fake Review Detector</h2>
-            <form action="/predict" method="post">
+            <form action="/predict" method="post" onsubmit="return false;">
                 <textarea name="review" rows="5" cols="40" placeholder="Enter a review..."></textarea><br>
                 <input type="submit" value="Analyze Review">
             </form>
@@ -503,7 +532,11 @@
         </div>
         <div class="meter-container">
             <div class="genuineness-meter">
-                <div class="meter-center">{{ confidence }}%</div>
+                <div class="meter-center">75%</div>
+            </div>
+            <div class="meter-labels">
+                <span style="color: #4CAF50;">● Genuine</span>
+                <span style="color: #f39c12;">● Fake</span>
             </div>
         </div>
     </div>
