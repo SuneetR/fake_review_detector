@@ -24,7 +24,6 @@
         /* Dark Mode Background */
         body.dark-mode {
             background: linear-gradient(to bottom, #0f2027, #203a43, #2c5364); /* Space-themed gradient */
-            background-size: cover;
             color: #ddd;
         }
 
@@ -185,47 +184,24 @@
             background-color: #45a049;
         }
 
-        /* Genuineness Meter */
-        #fake-review-form .meter-container {
+        /* Display Prediction and Confidence */
+        .result-container {
             flex: 1;
             text-align: center;
-        }
-
-        .genuineness-meter {
-            width: 150px;
-            height: 150px;
-            margin: auto;
-            position: relative;
-            background: conic-gradient(#4CAF50 0%, #4CAF50 50%, #f39c12 50% 100%);
-            border-radius: 50%;
+            background: #ffffff1a;
+            border-radius: 10px;
+            padding: 20px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
         }
 
-        .genuineness-meter .meter-center {
-            width: 80px;
-            height: 80px;
-            background: white;
-            border-radius: 50%;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2em;
-            font-weight: bold;
-            color: #333;
+        .result-container h2 {
+            font-size: 36px;
+            margin-bottom: 10px;
         }
 
-        .meter-labels {
-            margin-top: 10px;
-            font-size: 14px;
-        }
-
-        .meter-labels span {
-            margin-right: 10px;
+        .result-container h3 {
+            font-size: 28px;
+            margin-top: 0;
         }
 
         /* Introduction Video Section */
@@ -469,37 +445,6 @@
             document.getElementById('fake-review-form').scrollIntoView({ behavior: 'smooth' });
         }
 
-        // Update Genuineness Meter dynamically
-        function updateGenuinenessMeter(confidence) {
-            const meter = document.querySelector('.genuineness-meter');
-            const center = document.querySelector('.meter-center');
-            const percentage = confidence > 100 ? 100 : confidence;
-
-            meter.style.background = `conic-gradient(#4CAF50 0% ${percentage}%, #f39c12 ${percentage}% 100%)`;
-            center.innerText = `${percentage}%`;
-        }
-
-        // Prevent page scroll up on form submission for the contribution section
-        function handleFormSubmit(event, formId) {
-            event.preventDefault();
-            const form = document.getElementById(formId);
-            const responseMessage = form.querySelector('.response-message');
-            responseMessage.style.display = 'block';
-            form.reset(); // Clear the form
-        }
-
-        // Fade in on load
-        document.addEventListener("DOMContentLoaded", function() {
-            document.body.classList.add("fade-in");
-        });
-
-        // Fake example usage
-        // Example usage of the Genuineness Meter update function after getting the prediction
-        document.addEventListener("DOMContentLoaded", function() {
-            // Example: Update to 75% confidence
-            updateGenuinenessMeter(75);
-        });
-
     </script>
 </head>
 <body class="light-mode">
@@ -530,14 +475,9 @@
                 <h3>Confidence: {{ confidence }}</h3>
             {% endif %}
         </div>
-        <div class="meter-container">
-            <div class="genuineness-meter">
-                <div class="meter-center">75%</div>
-            </div>
-            <div class="meter-labels">
-                <span style="color: #4CAF50;">● Genuine</span>
-                <span style="color: #f39c12;">● Fake</span>
-            </div>
+        <div class="result-container">
+            <h2>Prediction Result: Fake</h2>
+            <h3>Confidence Level: 75%</h3>
         </div>
     </div>
 
