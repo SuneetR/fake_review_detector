@@ -405,7 +405,164 @@
         }
 
         /* Footer */
+        footer {
+            background-color: #333;
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+            margin-top: 40px;
+        }
 
+        footer a {
+            color: #ffd700;
+            text-decoration: none;
+            margin: 0 10px;
+            font-size: 14px;
+        }
+
+        footer a:hover {
+            color: #ff8c00;
+        }
+
+        /* Back to Top Button */
+        .back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #ff8c00;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: none;
+            z-index: 1000;
+            transition: background-color 0.3s;
+        }
+
+        .back-to-top:hover {
+            background: #ffd700;
+        }
+    </style>
+    <script>
+        // Dark Mode Toggle Functionality
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            document.body.classList.toggle('light-mode');
+        }
+
+        // Back to Top Button Functionality
+        window.onscroll = function() {
+            var topButton = document.getElementById('backToTop');
+            if (document.body.scrollTop > 100 || document.documentElement.scrollTop > 100) {
+                topButton.style.display = "block";
+            } else {
+                topButton.style.display = "none";
+            }
+        };
+
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Remove hero section on clicking "Get Started"
+        function removeHeroSection() {
+            document.querySelector('.hero').style.display = 'none';
+            document.getElementById('fake-review-form').scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</head>
+<body class="light-mode">
+    <header>
+        <h1>Fake Review Detector</h1>
+        <button class="dark-mode-toggle" onclick="toggleDarkMode()">Toggle Dark Mode</button>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="content">
+            <h1>Identify Fake Reviews Instantly</h1>
+            <p>Join us in making online reviews trustworthy again.</p>
+            <a href="#fake-review-form" class="cta" onclick="removeHeroSection()">Get Started</a>
+        </div>
+    </section>
+
+    <!-- Fake Review Detector Section -->
+    <div id="fake-review-form" class="fake-review-form">
+        <div class="form-container">
+            <h2>Fake Review Detector</h2>
+            <form action="/predict" method="post">
+                <textarea name="review" rows="5" cols="40" placeholder="Enter a review..."></textarea><br>
+                <input type="submit" value="Analyze Review">
+            </form>
+            {% if prediction %}
+            <div class="result-container">
+                <h2>Prediction: {{ prediction }}</h2>
+                <div class="pie-chart" style="background-image: conic-gradient(#4CAF50 0% {{confidence}}%, #f44336 {{confidence}}% 100%);">{{ confidence }}%</div>
+                <h3>Confidence: {{ confidence }}%</h3>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Combined Introduction and Video Section -->
+    <div class="intro-video-container">
+        <h3>Know More About Our Project</h3>
+        <p>We aim to identify fake reviews using advanced machine learning algorithms. Join us on our journey to make online reviews trustworthy.</p>
+        <iframe src="https://www.youtube.com/embed/xvFZjo5PgG0?si=09OzmdQN09CDqK9U"></iframe>
+    </div>
+
+    <!-- Team Section -->
+    <div class="team" id="team">
+        <h2>Meet Our Team</h2>
+        <div class="team-member">
+            <img src="https://randomuser.me/api/portraits/men/1.jpg" alt="Team Member 1">
+            <h3>Suneet Rohra</h3>
+            <p>Team Leader</p>
+        </div>
+        <div class="team-member">
+            <img src="https://randomuser.me/api/portraits/men/2.jpg" alt="Team Member 2">
+            <h3>Pavan Modha</h3>
+            <p>Designer</p>
+        </div>
+        <div class="team-member">
+            <img src="https://randomuser.me/api/portraits/women/3.jpg" alt="Team Member 3">
+            <h3>Sharanya Holla</h3>
+            <p>Researcher</p>
+        </div>
+    </div>
+
+    <!-- Suggestions Section -->
+    <div class="suggestions">
+        <h2>Do You Have Any Suggestions for Us to Improve?</h2>
+        <form id="suggestionForm" action="/submit_feedback" method="post">
+            <textarea name="feedback" rows="5" cols="40" placeholder="We'd love to hear your thoughts!" required></textarea><br><br>
+            <input type="submit" value="Submit">
+        </form>
+        <div class="response-message">We've received your suggestion. Thank you!</div>
+    </div>
+
+    <!-- Contribution Section -->
+    <div class="contribute">
+        <h2>Want to Contribute to Our Project?</h2>
+        <p>Submit a review you believe is true or false, and help us improve our model!</p>
+        <form id="contributionForm" action="/submit_review" method="post">
+            <label for="contribute-review">Upload a review file (optional):</label><br><br>
+            <input type="file" name="contribute-review"><br><br>
+            <label for="review">Or enter a review:</label><br><br>
+            <textarea name="review" rows="5" cols="40"></textarea><br>
+            <div class="radio-container">
+                <label><input type="radio" name="review-type" value="true"> True</label>
+                <label><input type="radio" name="review-type" value="false"> False</label>
+            </div>
+            <input type="submit" value="Submit">
+            <div class="response-message">Thank you! We have received your review.</div>
+        </form>
+    </div>
+
+    <!-- Back to Top Button -->
+    <div id="backToTop" class="back-to-top" onclick="scrollToTop()">&#8679;</div>
+
+    <!-- Footer Section -->
     <footer>
         <p>&copy; 2024 Fake Review Detector. All Rights Reserved.</p>
         <p>Contact Email: <a href="mailto:TeamAlpha_fakereviewdetector@gmail.com">TeamAlpha_fakereviewdetector@gmail.com</a></p>
