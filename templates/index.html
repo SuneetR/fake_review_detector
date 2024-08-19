@@ -9,28 +9,23 @@
 
         body {
             font-family: 'Inter', sans-serif;
-            color: #333;
             margin: 0;
             padding: 0;
             transition: background-color 0.3s, color 0.3s;
             overflow-x: hidden;
-        }
-
-        /* Light Mode Background with Gradient and Streaks */
-        body.light-mode {
-            background: linear-gradient(120deg, #f3f4f7, #ffffff);
-            background-image: url('https://source.unsplash.com/collection/181581/1920x1080'), linear-gradient(135deg, rgba(243, 244, 247, 0.8), rgba(255, 255, 255, 0.8));
-            background-blend-mode: overlay;
-            background-size: cover;
             color: #333;
         }
 
-        /* Dark Mode Background - Hacker/Coder Aesthetic */
+        /* Light Mode Background with Gradient and Subtle Pattern */
+        body.light-mode {
+            background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+            color: #333;
+        }
+
+        /* Dark Mode Background - Futuristic with Neon Accents */
         body.dark-mode {
-            background: radial-gradient(circle, rgba(38, 50, 56, 1) 0%, rgba(18, 18, 18, 1) 100%);
+            background: linear-gradient(135deg, #1f1f1f, #333333);
             color: #ddd;
-            background-image: url('https://source.unsplash.com/1920x1080/?code,technology');
-            background-blend-mode: overlay;
         }
 
         header {
@@ -49,23 +44,6 @@
             font-size: 48px;
             margin: 0;
             letter-spacing: 2px;
-            animation: title-slide-in 1.5s ease-out;
-        }
-
-        .dark-mode header {
-            background: rgba(30, 30, 30, 0.9);
-        }
-
-        /* Animated title slide-in */
-        @keyframes title-slide-in {
-            0% {
-                opacity: 0;
-                transform: translateX(-100%);
-            }
-            100% {
-                opacity: 1;
-                transform: translateX(0);
-            }
         }
 
         .nav {
@@ -121,29 +99,27 @@
             color: white;
         }
 
-        /* Hero Section with Animation */
+        /* Hero Section with Subtle Particle Effect */
         .hero {
             position: relative;
             height: 100vh;
-            background: url('https://source.unsplash.com/1920x1080/?futuristic,technology') no-repeat center center/cover;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.7), rgba(0, 0, 0, 0.7)), url('https://source.unsplash.com/1920x1080/?futuristic,technology') no-repeat center center/cover;
             display: flex;
             justify-content: center;
             align-items: center;
             text-align: center;
             color: white;
-            animation: hero-fade-in 2s ease-out;
+            overflow: hidden;
         }
 
         .hero h1 {
             font-size: 4em;
             margin: 0;
-            animation: text-slide-in 2s ease-out;
         }
 
         .hero p {
             font-size: 1.5em;
             margin: 20px 0;
-            animation: text-slide-in 2.5s ease-out;
         }
 
         .hero .cta {
@@ -154,42 +130,20 @@
             text-decoration: none;
             border-radius: 30px;
             transition: background-color 0.3s;
-            animation: button-slide-in 3s ease-out;
         }
 
         .hero .cta:hover {
             background: #ffd700;
         }
 
-        @keyframes hero-fade-in {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
-        }
-
-        @keyframes text-slide-in {
-            from {
-                opacity: 0;
-                transform: translateY(50%);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes button-slide-in {
-            from {
-                opacity: 0;
-                transform: scale(0.8);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
+        .particle-effect {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1), rgba(0, 0, 0, 0.1));
+            pointer-events: none;
         }
 
         /* Fake Review Detector Section */
@@ -204,7 +158,6 @@
             width: 80%;
             border-radius: 20px;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-            animation: fadeInUp 1s ease-out;
         }
 
         #fake-review-form .form-container {
@@ -245,12 +198,12 @@
         #fake-review-form .graphic-container {
             flex: 1;
             text-align: center;
-            animation: rotateGraphic 5s infinite linear;
         }
 
         #fake-review-form .graphic-container img {
             width: 70%;
             filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.3));
+            animation: rotateGraphic 5s infinite linear;
         }
 
         @keyframes rotateGraphic {
@@ -268,7 +221,6 @@
             width: 80%;
             border-radius: 20px;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-            animation: fadeInUp 1.5s ease-out;
         }
 
         .intro-video-container h3 {
@@ -292,7 +244,6 @@
             border-radius: 20px;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
             color: white;
-            animation: fadeInUp 2s ease-out;
         }
 
         .team-member {
@@ -336,7 +287,6 @@
             margin: 40px auto;
             border-radius: 15px;
             box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.3);
-            animation: fadeInUp 1.5s ease-out;
         }
 
         .suggestions h2 {
@@ -379,7 +329,6 @@
             margin: 40px auto;
             border-radius: 15px;
             box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.3);
-            animation: fadeInUp 2s ease-out;
         }
 
         .contribute h2 {
@@ -447,30 +396,6 @@
         footer a:hover {
             color: #ff8c00;
         }
-
-        /* Animation */
-        .fade-in {
-            opacity: 0;
-            animation: fadeIn ease 2s;
-            animation-fill-mode: forwards;
-        }
-
-        @keyframes fadeIn {
-            0% { opacity: 0; }
-            100% { opacity: 1; }
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
     </style>
     <script>
         // Dark Mode Toggle Functionality
@@ -507,6 +432,7 @@
             <p>Join us in making online reviews trustworthy again.</p>
             <a href="#fake-review-form" class="cta">Get Started</a>
         </div>
+        <div class="particle-effect"></div>
     </section>
 
     <!-- Fake Review Detector Section -->
