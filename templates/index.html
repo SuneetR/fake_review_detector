@@ -64,7 +64,7 @@
             box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.3);
         }
 
-        .fake-review-form h2 {
+        .fake-review-form h2, .fake-review-form h3 {
             color: #333;
             margin-bottom: 20px;
             font-size: 28px;
@@ -85,12 +85,14 @@
         }
 
         .fake-review-form textarea {
-            width: 100%;
+            width: 80%;
             padding: 15px;
             font-size: 16px;
             margin-bottom: 20px;
             border-radius: 5px;
             border: 1px solid #ccc;
+            resize: none;
+            text-align: center;
         }
 
         .fake-review-form input[type="submit"] {
@@ -107,18 +109,6 @@
             background-color: #45a049;
         }
 
-        .fake-review-form input[type="radio"] {
-            margin: 0 10px;
-        }
-
-        .fake-review-form .response-message {
-            margin-top: 20px;
-            color: #4CAF50;
-            font-size: 20px;
-            font-weight: bold;
-            display: none;
-        }
-
         .intro-video-container {
             text-align: center;
             margin: 40px auto;
@@ -133,6 +123,13 @@
             margin-bottom: 15px;
             font-size: 24px;
             color: #2575fc;
+        }
+
+        .intro-video-container iframe {
+            width: 100%;
+            height: 450px;
+            border: none;
+            border-radius: 10px;
         }
 
         .team {
@@ -189,12 +186,14 @@
         }
 
         .contribute textarea {
-            width: 100%;
+            width: 80%;
             padding: 15px;
             font-size: 16px;
             margin-bottom: 20px;
             border-radius: 5px;
             border: 1px solid #ccc;
+            resize: none;
+            text-align: center;
         }
 
         .contribute input[type="radio"] {
@@ -215,6 +214,14 @@
             background-color: #45a049;
         }
 
+        .contribute .response-message {
+            margin-top: 20px;
+            color: #4CAF50;
+            font-size: 20px;
+            font-weight: bold;
+            display: none;
+        }
+
         .contact-info {
             text-align: center;
             margin-top: 40px;
@@ -223,11 +230,10 @@
         }
     </style>
     <script>
-        // Prevent page scroll up on form submission
+        // Prevent page scroll up on form submission for the contribution section
         function handleFormSubmit(event, formId) {
             event.preventDefault();
             const form = document.getElementById(formId);
-            // Show a confirmation message after submission
             const responseMessage = form.querySelector('.response-message');
             responseMessage.style.display = 'block';
             form.reset(); // Clear the form
@@ -249,23 +255,22 @@
     <!-- Fake Review Detector Form -->
     <div class="fake-review-form">
         <h2>Fake Review Detector</h2>
-        <p>(This is our beta version, currently under development)</p>
-        <form id="fakeReviewForm" onsubmit="handleFormSubmit(event, 'fakeReviewForm')" action="/predict" method="post">
+        <form action="/predict" method="post">
             <label for="review">Enter a review:</label><br><br>
             <textarea name="review" rows="5" cols="40" required></textarea><br><br>
-            <label for="review-type">Do you think this review is:</label><br><br>
-            <input type="radio" name="review-type" value="true" required> True
-            <input type="radio" name="review-type" value="false" required> False<br><br>
             <input type="submit" value="Submit">
-            <p class="response-message">Thank you! We have received your review.</p>
         </form>
+        {% if prediction %}
+            <h2>Prediction: {{ prediction }}</h2>
+            <h3>Confidence: {{ confidence }}</h3>
+        {% endif %}
     </div>
 
     <!-- Combined Introduction and Video Section -->
     <div class="intro-video-container">
         <h3>Know More About Our Project</h3>
         <p>We aim to identify fake reviews using advanced machine learning algorithms. Join us on our journey to make online reviews trustworthy.</p>
-        <iframe width="75%" height="50%" src="https://www.youtube.com/embed/xvFZjo5PgG0?si=09OzmdQN09CDqK9U"></iframe>
+        <iframe src="https://www.youtube.com/embed/xvFZjo5PgG0?si=09OzmdQN09CDqK9U"></iframe>
     </div>
 
     <!-- Team Section -->
@@ -295,7 +300,6 @@
         <form id="suggestionForm" onsubmit="handleFormSubmit(event, 'suggestionForm')" action="/submit_feedback" method="post">
             <textarea name="feedback" rows="5" cols="40" placeholder="We'd love to hear your thoughts!" required></textarea><br><br>
             <input type="submit" value="Submit">
-            <p class="response-message">Thank you! We have received your feedback.</p>
         </form>
     </div>
 
