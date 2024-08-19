@@ -1,3 +1,5 @@
+# app.py
+
 from flask import Flask, request, render_template, redirect, url_for
 from fake_review_detector import predict_review, update_model  # Import the update_model function
 import os
