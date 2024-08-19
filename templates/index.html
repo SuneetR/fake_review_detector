@@ -9,7 +9,6 @@
 
         body {
             font-family: 'Inter', sans-serif;
-            color: #333;
             margin: 0;
             padding: 0;
             overflow-x: hidden;
@@ -24,18 +23,17 @@
 
         /* Dark Mode Background */
         body.dark-mode {
-            background: linear-gradient(135deg, #232526, #414345);
+            background: url('https://source.unsplash.com/1920x1080/?stars,space') no-repeat center center fixed;
+            background-size: cover;
             color: #ddd;
         }
 
         header {
-            position: sticky;
-            top: 0;
-            z-index: 1000;
             background: rgba(0, 0, 0, 0.8);
             padding: 20px;
             text-align: center;
             box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.3);
+            margin-bottom: 20px;
         }
 
         header h1 {
@@ -45,6 +43,7 @@
             letter-spacing: 2px;
         }
 
+        /* Navbar for Dark Mode */
         .nav {
             display: flex;
             justify-content: center;
@@ -65,6 +64,10 @@
 
         .nav a:hover {
             color: #ffd700;
+        }
+
+        .dark-mode .nav {
+            background-color: rgba(0, 0, 0, 0.9);
         }
 
         .dark-mode .nav a {
@@ -93,7 +96,7 @@
             color: white;
         }
 
-        /* Hero Section with Particle Animation */
+        /* Hero Section with Starry Background */
         .hero {
             position: relative;
             height: 100vh;
@@ -103,19 +106,6 @@
             align-items: center;
             text-align: center;
             color: white;
-        }
-
-        .hero::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: url('https://source.unsplash.com/1920x1080/?tech,futuristic');
-            background-size: cover;
-            opacity: 0.4;
-            z-index: 1;
         }
 
         .hero .content {
@@ -146,25 +136,9 @@
             background: #ffd700;
         }
 
-        /* Particle Effect */
-        @keyframes particle {
-            0% { transform: translateY(0) translateX(0); }
-            100% { transform: translateY(-200vh) translateX(200vw); }
+        .hero .cta:focus {
+            display: none;
         }
-
-        .particle {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            width: 2px;
-            height: 2px;
-            background: rgba(255, 255, 255, 0.8);
-            animation: particle 10s infinite linear;
-        }
-
-        .hero .particle:nth-child(1) { top: 80%; left: 10%; animation-duration: 15s; }
-        .hero .particle:nth-child(2) { top: 90%; left: 20%; animation-duration: 20s; }
-        .hero .particle:nth-child(3) { top: 85%; left: 30%; animation-duration: 12s; }
 
         /* Fake Review Detector Section */
         #fake-review-form {
@@ -215,20 +189,38 @@
             background-color: #45a049;
         }
 
-        #fake-review-form .graphic-container {
+        /* Genuineness Meter */
+        #fake-review-form .meter-container {
             flex: 1;
             text-align: center;
-            animation: rotateGraphic 5s infinite linear;
         }
 
-        #fake-review-form .graphic-container img {
-            width: 80%;
-            filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.3));
+        .genuineness-meter {
+            width: 150px;
+            height: 150px;
+            margin: auto;
+            position: relative;
+            background: conic-gradient(#4CAF50 0% 75%, #f39c12 75% 100%);
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
         }
 
-        @keyframes rotateGraphic {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .genuineness-meter .meter-center {
+            width: 80px;
+            height: 80px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
         }
 
         /* Introduction Video Section */
@@ -307,6 +299,7 @@
             margin: 40px auto;
             border-radius: 15px;
             box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.3);
+            text-align: center;
         }
 
         .suggestions h2 {
@@ -315,7 +308,7 @@
         }
 
         .suggestions textarea {
-            width: 100%;
+            width: 80%;
             padding: 20px;
             font-size: 16px;
             margin-bottom: 20px;
@@ -395,6 +388,13 @@
 
         .contribute input[type="submit"]:hover {
             background-color: #45a049;
+        }
+
+        .radio-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
         }
 
         /* Footer */
@@ -484,11 +484,8 @@
         <div class="content">
             <h1>Identify Fake Reviews Instantly</h1>
             <p>Join us in making online reviews trustworthy again.</p>
-            <a href="#fake-review-form" class="cta">Get Started</a>
+            <a href="#fake-review-form" class="cta" onclick="this.style.display='none'">Get Started</a>
         </div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
     </section>
 
     <!-- Fake Review Detector Section -->
@@ -496,12 +493,18 @@
         <div class="form-container">
             <h2>Fake Review Detector</h2>
             <form action="/predict" method="post">
-                <textarea name="review" rows="5" cols="40" placeholder="Enter a review..." required></textarea><br>
+                <textarea name="review" rows="5" cols="40" placeholder="Enter a review..."></textarea><br>
                 <input type="submit" value="Analyze Review">
             </form>
+            {% if prediction %}
+                <h2>Prediction: {{ prediction }}</h2>
+                <h3>Confidence: {{ confidence }}</h3>
+            {% endif %}
         </div>
-        <div class="graphic-container">
-            <img src="https://source.unsplash.com/500x500/?ai,abstract" alt="Review Analysis Graphic">
+        <div class="meter-container">
+            <div class="genuineness-meter">
+                <div class="meter-center">{{ confidence }}%</div>
+            </div>
         </div>
     </div>
 
@@ -549,12 +552,13 @@
             <label for="contribute-review">Upload a review file (optional):</label><br><br>
             <input type="file" name="contribute-review"><br><br>
             <label for="review">Or enter a review:</label><br><br>
-            <textarea name="review" rows="5" cols="40" required></textarea><br><br>
-            <label for="review-type">Do you think this review is:</label><br><br>
-            <input type="radio" name="review-type" value="true" required> True
-            <input type="radio" name="review-type" value="false" required> False<br><br>
+            <textarea name="review" rows="5" cols="40"></textarea><br>
+            <div class="radio-container">
+                <label><input type="radio" name="review-type" value="true"> True</label>
+                <label><input type="radio" name="review-type" value="false"> False</label>
+            </div>
             <input type="submit" value="Submit">
-            <p class="response-message">Thank you! We have received your review.</p>
+            <p class="response-message" style="display: none;">Thank you! We have received your review.</p>
         </form>
     </div>
 
