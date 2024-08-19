@@ -194,6 +194,20 @@
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
         }
 
+        .pie-chart {
+            width: 200px;
+            height: 200px;
+            background-image: conic-gradient(#4CAF50 0% {{confidence}}%, #f44336 {{confidence}}% 100%);
+            border-radius: 50%;
+            margin: 30px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #fff;
+            font-weight: bold;
+        }
+
         .result-container h2 {
             font-size: 36px;
             margin-bottom: 10px;
@@ -314,6 +328,12 @@
             background-color: #45a049;
         }
 
+        .response-message {
+            display: none;
+            color: green;
+            margin-top: 20px;
+        }
+
         /* Contribution Section */
         .contribute {
             background: linear-gradient(135deg, #2980b9, #3498db);
@@ -376,6 +396,12 @@
             justify-content: center;
             gap: 20px;
             margin: 20px 0;
+        }
+
+        .response-message {
+            display: none;
+            color: green;
+            margin-top: 20px;
         }
 
         /* Footer */
@@ -445,6 +471,14 @@
             document.getElementById('fake-review-form').scrollIntoView({ behavior: 'smooth' });
         }
 
+        // Handle form submissions to prevent navigation to a new page
+        function handleFormSubmit(event, formId) {
+            event.preventDefault();
+            const form = document.getElementById(formId);
+            const responseMessage = form.querySelector('.response-message');
+            responseMessage.style.display = 'block';
+            form.reset(); // Clear the form
+        }
     </script>
 </head>
 <body class="light-mode">
@@ -471,13 +505,12 @@
                 <input type="submit" value="Analyze Review">
             </form>
             {% if prediction %}
-                <h2>Prediction: {{ prediction }}</h2>
-                <h3>Confidence: {{ confidence }}</h3>
+                <div class="result-container">
+                    <h2>Prediction: {{ prediction }}</h2>
+                    <div class="pie-chart">{{ confidence }}%</div>
+                    <h3>Confidence: {{ confidence }}%</h3>
+                </div>
             {% endif %}
-        </div>
-        <div class="result-container">
-            <h2>Prediction Result: Fake</h2>
-            <h3>Confidence Level: 75%</h3>
         </div>
     </div>
 
@@ -515,6 +548,7 @@
             <textarea name="feedback" rows="5" cols="40" placeholder="We'd love to hear your thoughts!" required></textarea><br><br>
             <input type="submit" value="Submit">
         </form>
+        <div class="response-message">We've received your suggestion. Thank you!</div>
     </div>
 
     <!-- Contribution Section -->
@@ -531,7 +565,7 @@
                 <label><input type="radio" name="review-type" value="false"> False</label>
             </div>
             <input type="submit" value="Submit">
-            <p class="response-message" style="display: none;">Thank you! We have received your review.</p>
+            <div class="response-message">Thank you! We have received your review.</div>
         </form>
     </div>
 
