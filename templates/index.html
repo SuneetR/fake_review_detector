@@ -627,6 +627,30 @@
             initializeChart();
         }
 
+document.getElementById('reviewForm').addEventListener('submit', function(event) {
+        event.preventDefault(); // Prevent the form from reloading the page
+        
+        // Get the review text
+        const reviewText = document.getElementById('reviewText').value;
+        
+        // Send the review text to the backend via AJAX
+        fetch('/predict', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ review: reviewText })
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Update the DOM with the result
+            document.getElementById('predictionResult').innerText = `Prediction: ${data.prediction}`;
+            document.getElementById('confidenceResult').innerText = `Confidence: ${data.confidence}`;
+            document.getElementById('resultContainer').style.display = 'block';
+        })
+        .catch(error => console.error('Error:', error));
+    });
+
     </script>
 </head>
 <body>
@@ -646,20 +670,19 @@
 
     <!-- Fake Review Detector Section -->
     <div id="fake-review-form" class="fake-review-form">
-        <div class="form-container">
-            <h2>Fake Review Detector</h2>
-            <form action="/predict" method="post">
-                <textarea name="review" rows="5" cols="40" placeholder="Enter a review..."></textarea><br>
-                <input type="submit" value="Analyze Review">
-            </form>
-            {% if prediction %}
-            <div class="result-container">
-                <h2>Prediction: {{ prediction }}</h2>
-                <h3>Confidence: {{ confidence }}</h3>
-            </div>
-            {% endif %}
+    <div class="form-container">
+        <h2>Fake Review Detector</h2>
+        <form id="reviewForm">
+            <textarea id="reviewText" name="review" rows="5" cols="40" placeholder="Enter a review..."></textarea><br>
+            <input type="submit" value="Analyze Review">
+        </form>
+        <!-- Container to show the prediction result -->
+        <div id="resultContainer" class="result-container" style="display: none;">
+            <h2 id="predictionResult">Prediction: </h2>
+            <h3 id="confidenceResult">Confidence: </h3>
         </div>
     </div>
+</div>
 
 
     <!-- Collapsible Code Snippet Section -->
