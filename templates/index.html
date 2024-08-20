@@ -627,24 +627,21 @@
             initializeChart();
         }
 // Function to dynamically update chart with live data
-function updateChart(predictionPercentage) {
+// Basic initialization of the chart
+function initializeChart() {
     const ctx = document.getElementById('reviewChart').getContext('2d');
 
-    // Destroy previous chart instance if it exists
-    if (window.reviewChart) {
-        window.reviewChart.destroy();
-    }
-
+    // Create a simple doughnut chart with dummy data
     window.reviewChart = new Chart(ctx, {
         type: 'doughnut',
         data: {
             labels: ['Fake', 'Genuine'],
             datasets: [{
                 label: 'Fake Reviews Detection',
-                data: [predictionPercentage, 100 - predictionPercentage],
+                data: [50, 50], // 50% Fake, 50% Genuine
                 backgroundColor: [
-                    predictionPercentage > 50 ? '#e74c3c' : '#2ecc71',  // Red if more than 50% fake, otherwise green
-                    '#ecf0f1'
+                    '#e74c3c',  // Red for fake
+                    '#2ecc71'   // Green for genuine
                 ],
                 borderColor: '#34495e',
                 borderWidth: 2
@@ -670,12 +667,10 @@ function updateChart(predictionPercentage) {
     });
 }
 
-// Call the updateChart function with the prediction percentage
+// Initialize the chart when the window loads
 window.onload = function () {
     setDarkModeBasedOnTime();
-    // Example: Assuming prediction confidence is 65%
-    const predictionConfidence = 65;
-    updateChart(predictionConfidence);
+    initializeChart();
 };
 
 
