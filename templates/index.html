@@ -36,10 +36,13 @@
         }
 
         header h1 {
-            color: #fff;
             font-size: 48px;
             margin: 0;
             letter-spacing: 2px;
+            background: linear-gradient(90deg, #ff8c00, #ffd700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
         }
 
         /* Navbar for Dark Mode */
@@ -99,12 +102,13 @@
         .hero {
             position: relative;
             height: 100vh;
-            background: linear-gradient(135deg, #2a5298, #1e3c72);
+            background: linear-gradient(135deg, #141E30, #243B55);
             display: flex;
             justify-content: center;
             align-items: center;
             text-align: center;
             color: white;
+            overflow: hidden;
         }
 
         .hero .content {
@@ -114,11 +118,18 @@
         .hero h1 {
             font-size: 4em;
             margin: 0;
+            opacity: 0;
+            animation: fadeIn 2s ease-in-out forwards;
         }
 
         .hero p {
             font-size: 1.5em;
             margin: 20px 0;
+            animation: typewriter 4s steps(40) 1s forwards;
+            border-right: 2px solid #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            opacity: 0;
         }
 
         .hero .cta {
@@ -129,10 +140,21 @@
             text-decoration: none;
             border-radius: 30px;
             transition: background-color 0.3s;
+            margin-top: 20px;
         }
 
         .hero .cta:hover {
             background: #ffd700;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        @keyframes typewriter {
+            0% { width: 0; opacity: 1; }
+            100% { width: 100%; opacity: 1; }
         }
 
         /* Fake Review Detector Section */
