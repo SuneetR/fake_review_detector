@@ -626,58 +626,6 @@
             setDarkModeBasedOnTime();
             initializeChart();
         }
-// Function to dynamically update chart with live data
-function updateChart(predictionPercentage) {
-    const ctx = document.getElementById('reviewChart').getContext('2d');
-
-    // Destroy previous chart instance if it exists
-    if (window.reviewChart) {
-        window.reviewChart.destroy();
-    }
-
-    window.reviewChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Fake', 'Genuine'],
-            datasets: [{
-                label: 'Fake Reviews Detection',
-                data: [predictionPercentage, 100 - predictionPercentage],
-                backgroundColor: [
-                    predictionPercentage > 50 ? '#e74c3c' : '#2ecc71',  // Red if more than 50% fake, otherwise green
-                    '#ecf0f1'
-                ],
-                borderColor: '#34495e',
-                borderWidth: 2
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            cutout: '70%',
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function (tooltipItem) {
-                            return tooltipItem.label + ': ' + tooltipItem.raw.toFixed(2) + '%';
-                        }
-                    }
-                }
-            }
-        }
-    });
-}
-
-// Call the updateChart function with the prediction percentage
-window.onload = function () {
-    setDarkModeBasedOnTime();
-    // Example: Assuming prediction confidence is 65%
-    const predictionConfidence = 65;
-    updateChart(predictionConfidence);
-};
-
 
     </script>
 </head>
@@ -712,12 +660,6 @@ window.onload = function () {
             {% endif %}
         </div>
     </div>
-
-    <!-- Chart Section -->
-<div class="chart-container">
-    <h3>Live Prediction Confidence</h3>
-    <canvas id="predictionChart"></canvas>
-</div>
 
 
     <!-- Collapsible Code Snippet Section -->
