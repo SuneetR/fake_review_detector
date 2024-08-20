@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, redirect, url_for, jsonify
+from flask import Flask, request, render_template, jsonify
 from fake_review_detector import predict_review, update_model
 import os
 
@@ -24,7 +24,7 @@ def home():
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    if request.is_json:  # Check if the request contains JSON data
+    if request.is_json:  # Handle AJAX request
         data = request.get_json()
         review = data.get('review')
         
@@ -36,10 +36,10 @@ def predict():
             'prediction': result,
             'confidence': confidence
         })
-    else:  # Fallback for regular form submissions (non-AJAX)
+    else:  # Handle traditional form submission
         review = request.form['review']
         result, confidence = predict_review(review)
-        return render_template('index.html', prediction=result, confidence=confidence)
+        return render_template('index.html', prediction=result, confidence=confidence, review_text=review)
 
 @app.route('/submit_feedback', methods=['POST'])
 def submit_feedback():
