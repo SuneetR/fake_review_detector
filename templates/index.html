@@ -626,54 +626,6 @@
             setDarkModeBasedOnTime();
             initializeChart();
         }
-// Function to dynamically update chart with live data
-// Basic initialization of the chart
-function initializeChart() {
-    const ctx = document.getElementById('reviewChart').getContext('2d');
-
-    // Create a simple doughnut chart with dummy data
-    window.reviewChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Fake', 'Genuine'],
-            datasets: [{
-                label: 'Fake Reviews Detection',
-                data: [50, 50], // 50% Fake, 50% Genuine
-                backgroundColor: [
-                    '#e74c3c',  // Red for fake
-                    '#2ecc71'   // Green for genuine
-                ],
-                borderColor: '#34495e',
-                borderWidth: 2
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            cutout: '70%',
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function (tooltipItem) {
-                            return tooltipItem.label + ': ' + tooltipItem.raw.toFixed(2) + '%';
-                        }
-                    }
-                }
-            }
-        }
-    });
-}
-
-// Initialize the chart when the window loads
-window.onload = function () {
-    setDarkModeBasedOnTime();
-    initializeChart();
-};
-
-
 
     </script>
 </head>
@@ -708,13 +660,6 @@ window.onload = function () {
             {% endif %}
         </div>
     </div>
-
-    
-<div class="chart-container">
-    <h3>Live Prediction Confidence</h3>
-    <canvas id="reviewChart"></canvas>
-</div>
-
 
 
     <!-- Collapsible Code Snippet Section -->
