@@ -628,7 +628,7 @@
         }
 
 document.getElementById('reviewForm').addEventListener('submit', function(event) {
-        event.preventDefault(); // Prevent the form from reloading the page
+        event.preventDefault();  // Prevent the form from submitting normally
         
         // Get the review text
         const reviewText = document.getElementById('reviewText').value;
@@ -649,7 +649,6 @@ document.getElementById('reviewForm').addEventListener('submit', function(event)
             document.getElementById('resultContainer').style.display = 'block';
         })
         .catch(error => console.error('Error:', error));
-    });
 
     </script>
 </head>
