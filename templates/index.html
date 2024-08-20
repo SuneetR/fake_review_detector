@@ -251,6 +251,8 @@
             border-radius: 20px;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
             color: white;
+            display: flex;
+            justify-content: space-around;
         }
 
         .team-member {
@@ -264,6 +266,7 @@
             cursor: pointer;
             overflow: hidden;
             position: relative;
+            text-align: center;
         }
 
         .team-member:hover {
@@ -497,7 +500,8 @@
             {% if prediction %}
             <div class="result-container">
                 <h2>Prediction: {{ prediction }}</h2>
-                <h3>Accuracy: {{ confidence }}</h3>
+                <h3>Confidence: {{ confidence }}</h3>
+            </div>
             {% endif %}
         </div>
     </div>
