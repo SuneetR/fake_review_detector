@@ -35,6 +35,14 @@ def submit_feedback():
     print(f"Received feedback: {feedback}")
     return redirect(url_for('home'))
 
+@app.route('/predict', methods=['POST'])
+def predict():
+    product_type = request.form['product_type']
+    review = request.form['review']
+    result, confidence = predict_review(product_type, review)
+    return render_template('index.html', prediction=result, confidence=confidence)
+
+
 @app.route('/submit_review', methods=['POST'])
 def submit_review():
     review = request.form['review']
