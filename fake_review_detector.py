@@ -1,11 +1,11 @@
-# fake_review_detector.py
-
 import string
 import nltk
 from sklearn.pipeline import make_pipeline
 from sklearn.linear_model import LogisticRegression
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, GridSearchCV, cross_val_predict
+from sklearn.calibration import CalibratedClassifierCV
+from sklearn.metrics import classification_report, accuracy_score, f1_score
 import pandas as pd
 import numpy as np
 from nltk.corpus import stopwords
@@ -19,7 +19,7 @@ nltk.download('wordnet')
 stop_words = set(stopwords.words('english'))
 lemmatizer = WordNetLemmatizer()
 
-# Load data from CSV file (Make sure the file exists and is correctly placed)
+# Load data from CSV file (Ensure the file exists and is correctly placed)
 try:
     df = pd.read_csv('reviews.csv')
 except FileNotFoundError:
@@ -39,27 +39,52 @@ df['review'] = df['review'].apply(preprocess_text)
 if not pd.api.types.is_numeric_dtype(df['label']):
     df['label'] = df['label'].astype(int)
 
-# Split the dataset into training and test sets
+# Split the dataset into features and target
 X = df['review']
 y = df['label']
+
+# Split the dataset into training and test sets
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
 # Create a pipeline with TfidfVectorizer and LogisticRegression
 pipeline = make_pipeline(
     TfidfVectorizer(),
-    LogisticRegression(solver='liblinear', C=1.0, random_state=42)
+    LogisticRegression(solver='liblinear', random_state=42)
 )
 
-# Train the model
-pipeline.fit(X_train, y_train)
+# Hyperparameter tuning using GridSearchCV
+param_grid = {
+    'tfidfvectorizer__ngram_range': [(1, 1), (1, 2)],  # Unigrams and bigrams
+    'tfidfvectorizer__max_df': [0.75, 1.0],
+    'tfidfvectorizer__min_df': [1, 5],
+    'logisticregression__C': [0.1, 1, 10]  # Regularization strength
+}
+
+grid_search = GridSearchCV(pipeline, param_grid, cv=5, n_jobs=-1, scoring='accuracy')
+grid_search.fit(X_train, y_train)
+
+# Best model from GridSearch
+best_model = grid_search.best_estimator_
+
+# Calibrate the model to improve probability estimates
+calibrated_model = CalibratedClassifierCV(best_model, method='sigmoid', cv='prefit')
+calibrated_model.fit(X_train, y_train)
+
+# Evaluate the model on the test set
+y_pred = calibrated_model.predict(X_test)
+y_proba = calibrated_model.predict_proba(X_test)
+
+print("Classification Report:\n", classification_report(y_test, y_pred))
+print("Accuracy:", accuracy_score(y_test, y_pred))
+print("F1 Score:", f1_score(y_test, y_pred))
 
 # Function to predict if a review is fake or genuine
 def predict_review(review):
     # Preprocess the review
     preprocessed_review = preprocess_text(review)
     # Predict
-    prediction = pipeline.predict([preprocessed_review])[0]
-    confidence = pipeline.predict_proba([preprocessed_review])[0].max() * 100
+    prediction = calibrated_model.predict([preprocessed_review])[0]
+    confidence = calibrated_model.predict_proba([preprocessed_review])[0].max() * 100
     # Interpret the result
     result = 'Fake' if prediction == 1 else 'Genuine'
     return result, f"{confidence:.2f}%"
@@ -72,5 +97,5 @@ def update_model(new_review, new_label):
     # Append new data to the training set
     X_train = pd.concat([X_train, pd.Series(preprocessed_review)], ignore_index=True)
     y_train = pd.concat([y_train, pd.Series(new_label)], ignore_index=True)
-    # Retrain the model
-    pipeline.fit(X_train, y_train)
+    # Retrain the model with the new data
+    calibrated_model.fit(X_train, y_train)
