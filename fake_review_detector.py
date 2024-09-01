@@ -3,7 +3,7 @@ import nltk
 from sklearn.pipeline import make_pipeline
 from sklearn.linear_model import LogisticRegression
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.model_selection import train_test_split, GridSearchCV, cross_val_predict
+from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.metrics import classification_report, accuracy_score, f1_score
 import pandas as pd
@@ -19,7 +19,7 @@ nltk.download('wordnet')
 stop_words = set(stopwords.words('english'))
 lemmatizer = WordNetLemmatizer()
 
-# Load data from CSV file (Ensure the file exists and is correctly placed)
+# Load data from CSV file
 try:
     df = pd.read_csv('reviews.csv')
 except FileNotFoundError:
@@ -35,7 +35,7 @@ def preprocess_text(text):
 # Apply preprocessing to the dataset
 df['review'] = df['review'].apply(preprocess_text)
 
-# Ensure 'label' column is numeric (1 for fake, 0 for genuine)
+# Ensure 'label' column is numeric (1 for genuine, 0 for fake)
 if not pd.api.types.is_numeric_dtype(df['label']):
     df['label'] = df['label'].astype(int)
 
@@ -67,7 +67,7 @@ grid_search.fit(X_train, y_train)
 best_model = grid_search.best_estimator_
 
 # Calibrate the model to improve probability estimates
-calibrated_model = CalibratedClassifierCV(best_model, method='sigmoid', cv='prefit')
+calibrated_model = CalibratedClassifierCV(best_model, method='sigmoid', cv=5)
 calibrated_model.fit(X_train, y_train)
 
 # Evaluate the model on the test set
@@ -86,7 +86,7 @@ def predict_review(review):
     prediction = calibrated_model.predict([preprocessed_review])[0]
     confidence = calibrated_model.predict_proba([preprocessed_review])[0].max() * 100
     # Interpret the result
-    result = 'Fake' if prediction == 1 else 'Genuine'
+    result = 'Genuine' if prediction == 1 else 'Fake'
     return result, f"{confidence:.2f}%"
 
 # Self-learning function to update the model with new data
@@ -98,4 +98,8 @@ def update_model(new_review, new_label):
     X_train = pd.concat([X_train, pd.Series(preprocessed_review)], ignore_index=True)
     y_train = pd.concat([y_train, pd.Series(new_label)], ignore_index=True)
     # Retrain the model with the new data
+    pipeline.fit(X_train, y_train)
+    # Recalibrate the model
+    global calibrated_model
+    calibrated_model = CalibratedClassifierCV(pipeline, method='sigmoid', cv=5)
     calibrated_model.fit(X_train, y_train)
