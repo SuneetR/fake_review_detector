@@ -12,7 +12,6 @@ from imblearn.over_sampling import SMOTE
 from sklearn.pipeline import Pipeline
 from sklearn.decomposition import TruncatedSVD
 from sklearn.preprocessing import StandardScaler
-from sklearn.base import BaseEstimator, TransformerMixin
 import xgboost as xgb
 
 # Download necessary NLTK resources
@@ -50,11 +49,6 @@ y = df['label']
 # Split the dataset into training and test sets
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Handle class imbalance using SMOTE
-smote = SMOTE(random_state=42)
-X_train_resampled, y_train_resampled = smote.fit_resample(X_train.values.reshape(-1, 1), y_train)
-X_train_resampled = X_train_resampled.ravel()
-
 # Feature engineering pipeline using TF-IDF and optional dimensionality reduction
 feature_pipeline = Pipeline([
     ('tfidf', TfidfVectorizer(max_features=1000, ngram_range=(1, 1))),  # Reduce features
@@ -62,8 +56,12 @@ feature_pipeline = Pipeline([
 ])
 
 # Transform the features
-X_train_transformed = feature_pipeline.fit_transform(X_train_resampled)
+X_train_transformed = feature_pipeline.fit_transform(X_train)
 X_test_transformed = feature_pipeline.transform(X_test)
+
+# Handle class imbalance using SMOTE on numerical features
+smote = SMOTE(random_state=42)
+X_train_resampled, y_train_resampled = smote.fit_resample(X_train_transformed, y_train)
 
 # XGBoost Classifier (further reduced parameters)
 xgb_model = xgb.XGBClassifier(objective='binary:logistic', random_state=42, n_estimators=30, max_depth=3)  # Reduce complexity
@@ -76,14 +74,14 @@ param_grid = {
 }
 
 grid_search = GridSearchCV(xgb_model, param_grid, cv=2, n_jobs=-1, scoring='roc_auc')  # Reduce cross-validation folds
-grid_search.fit(X_train_transformed, y_train_resampled)
+grid_search.fit(X_train_resampled, y_train_resampled)
 
 # Best model from GridSearch
 best_model = grid_search.best_estimator_
 
 # Calibrate the model to improve probability estimates
 calibrated_model = CalibratedClassifierCV(best_model, method='sigmoid', cv=2)  # Reduce cross-validation folds
-calibrated_model.fit(X_train_transformed, y_train_resampled)
+calibrated_model.fit(X_train_resampled, y_train_resampled)
 
 # Evaluate the model on the test set
 y_pred = calibrated_model.predict(X_test_transformed)
@@ -113,17 +111,17 @@ def predict_review(review):
 
 # Self-learning function to update the model with new data
 def update_model(new_review, new_label):
-    global X_train_transformed, y_train_resampled
+    global X_train_resampled, y_train_resampled
     # Preprocess the new review
     preprocessed_review = preprocess_text(new_review)
     # Transform the new review to features
     transformed_review = feature_pipeline.transform([preprocessed_review])
     # Append new data to the training set
-    X_train_transformed = np.vstack([X_train_transformed, transformed_review])
+    X_train_resampled = np.vstack([X_train_resampled, transformed_review])
     y_train_resampled = np.append(y_train_resampled, new_label)
     # Retrain the model with the new data
-    best_model.fit(X_train_transformed, y_train_resampled)
+    best_model.fit(X_train_resampled, y_train_resampled)
     # Recalibrate the model
     global calibrated_model
     calibrated_model = CalibratedClassifierCV(best_model, method='sigmoid', cv=2)
-    calibrated_model.fit(X_train_transformed, y_train_resampled)
+    calibrated_model.fit(X_train_resampled, y_train_resampled)
