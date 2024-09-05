@@ -1,5 +1,4 @@
 import string
-import nltk
 import pandas as pd
 import numpy as np
 import xgboost as xgb
@@ -8,26 +7,22 @@ from sklearn.metrics import classification_report, accuracy_score, f1_score, roc
 from sklearn.pipeline import Pipeline
 from sklearn.decomposition import PCA
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.preprocessing import StandardScaler
-from sklearn.base import BaseEstimator, TransformerMixin  
 from imblearn.over_sampling import SMOTE
 from imblearn.pipeline import Pipeline as ImbPipeline
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 import torch
 from transformers import BertTokenizer, BertModel
-
-# Download necessary NLTK resources
-nltk.download('stopwords')
-nltk.download('wordnet')
+from sklearn.base import BaseEstimator, TransformerMixin
+import gc
 
 # Initialize NLTK components
 stop_words = set(stopwords.words('english'))
 lemmatizer = WordNetLemmatizer()
 
 # Load pre-trained BERT model and tokenizer
-tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-bert_model = BertModel.from_pretrained('bert-base-uncased')
+tokenizer = BertTokenizer.from_pretrained('distilbert-base-uncased')
+bert_model = BertModel.from_pretrained('distilbert-base-uncased')
 
 # Preprocess text function
 def preprocess_text(text):
@@ -73,8 +68,8 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 
 # Advanced feature engineering pipeline
 feature_pipeline = Pipeline([
-    ('tfidf', TfidfVectorizer(max_features=10000, ngram_range=(1, 3))),  # Increased features and n-grams
-    ('pca', PCA(n_components=150))  # Dimensionality reduction
+    ('tfidf', TfidfVectorizer(max_features=5000, ngram_range=(1, 2))),  # Reduced features and n-grams
+    ('pca', PCA(n_components=100))  # Reduced components
 ])
 
 # Combine feature extraction with SMOTE and XGBoost in an imbalanced pipeline
@@ -86,14 +81,14 @@ pipeline = ImbPipeline([
 
 # Hyperparameter tuning using GridSearchCV
 param_grid = {
-    'xgb__learning_rate': [0.01, 0.05, 0.1],
-    'xgb__max_depth': [6, 10, 12],
-    'xgb__subsample': [0.7, 0.8, 1.0],
-    'xgb__colsample_bytree': [0.7, 0.8, 1.0],
-    'xgb__n_estimators': [100, 200, 300]
+    'xgb__learning_rate': [0.01, 0.05],
+    'xgb__max_depth': [6, 10],
+    'xgb__subsample': [0.7, 0.8],
+    'xgb__colsample_bytree': [0.7, 0.8],
+    'xgb__n_estimators': [100, 200]
 }
 
-grid_search = GridSearchCV(pipeline, param_grid, cv=5, n_jobs=-1, scoring='f1')
+grid_search = GridSearchCV(pipeline, param_grid, cv=3, n_jobs=-1, scoring='f1')
 grid_search.fit(X_train, y_train)
 
 # Best model from GridSearch
@@ -116,3 +111,7 @@ print(f'Precision: {precision}\nRecall: {recall}')
 import joblib
 joblib.dump(best_model, 'best_model.pkl')
 joblib.dump(feature_pipeline, 'feature_pipeline.pkl')
+
+# Release memory
+del df, X, y, X_train, X_test, y_train, y_test
+gc.collect()
