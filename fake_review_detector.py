@@ -9,22 +9,25 @@ from sklearn.decomposition import PCA
 from sklearn.feature_extraction.text import TfidfVectorizer
 from imblearn.over_sampling import SMOTE
 from imblearn.pipeline import Pipeline as ImbPipeline
+import torch
 from transformers import DistilBertTokenizer, DistilBertModel
 from sklearn.base import BaseEstimator, TransformerMixin
-import torch
 import gc
 
-# Initialize NLTK components
+# Alternative stop words list
+stop_words = set([
+    'i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', 'your', 'yours', 'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she', 'her', 'hers', 'herself', 'it', 'its', 'itself', 'they', 'them', 'their', 'theirs', 'themselves', 'what', 'which', 'who', 'whom', 'this', 'that', 'these', 'those', 'am', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'having', 'do', 'does', 'did', 'doing', 'a', 'an', 'the', 'and', 'but', 'if', 'or', 'because', 'as', 'until', 'while', 'of', 'at', 'by', 'for', 'with', 'about', 'against', 'between', 'into', 'through', 'during', 'before', 'after', 'above', 'below', 'to', 'from', 'up', 'down', 'in', 'out', 'on', 'off', 'over', 'under', 'again', 'further', 'then', 'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all', 'any', 'both', 'each', 'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 's', 't', 'can', 'will', 'just', 'don', 'should', 'now'
+])
 import nltk
-from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
+import transformers
 
-stop_words = set(stopwords.words('english'))
+# Initialize NLTK components
 lemmatizer = WordNetLemmatizer()
 
-# Load pre-trained DistilBERT model and tokenizer
+# Load pre-trained BERT model and tokenizer
 tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased')
-distilbert_model = DistilBertModel.from_pretrained('distilbert-base-uncased')
+bert_model = DistilBertModel.from_pretrained('distilbert-base-uncased')
 
 # Preprocess text function
 def preprocess_text(text):
@@ -33,14 +36,14 @@ def preprocess_text(text):
     text = ' '.join([lemmatizer.lemmatize(word) for word in text.split() if word not in stop_words])
     return text
 
-# Convert text to DistilBERT embeddings
+# Convert text to BERT embeddings
 def text_to_bert(text):
-    tokens = tokenizer(text, return_tensors='pt', padding=True, truncation=True, max_length=128, clean_up_tokenization_spaces=True)
+    tokens = tokenizer(text, return_tensors='pt', padding=True, truncation=True, max_length=128)
     with torch.no_grad():
-        outputs = distilbert_model(**tokens)
+        outputs = bert_model(**tokens)
     return outputs.last_hidden_state.mean(dim=1).squeeze().numpy()
 
-# Custom transformer for DistilBERT embeddings
+# Custom transformer for BERT embeddings
 class BERTVectorizer(BaseEstimator, TransformerMixin):
     def fit(self, X, y=None):
         return self
