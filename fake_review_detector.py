@@ -1,15 +1,19 @@
 import string
 import nltk
-from sklearn.pipeline import make_pipeline
+import spacy
+from sklearn.pipeline import make_pipeline, FeatureUnion
 from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.metrics import classification_report, accuracy_score, f1_score
+from sklearn.base import BaseEstimator, TransformerMixin
 import pandas as pd
 import numpy as np
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
+from collections import Counter
 
 # Download necessary NLTK resources
 nltk.download('stopwords')
@@ -19,18 +23,20 @@ nltk.download('wordnet')
 stop_words = set(stopwords.words('english'))
 lemmatizer = WordNetLemmatizer()
 
+# Load Spacy model for more advanced NLP processing
+nlp = spacy.load('en_core_web_sm')
+
 # Load data from CSV file
 try:
     df = pd.read_csv('reviews.csv')
 except FileNotFoundError:
     raise Exception("The file 'reviews.csv' was not found. Please make sure it's in the correct directory.")
 
-# Data preprocessing function
+# Data preprocessing function with Spacy for better tokenization and lemmatization
 def preprocess_text(text):
-    text = text.lower()  # Lowercase text
-    text = ''.join([char for char in text if char not in string.punctuation])  # Remove punctuation
-    text = ' '.join([lemmatizer.lemmatize(word) for word in text.split() if word not in stop_words])  # Remove stopwords and lemmatize
-    return text
+    doc = nlp(text.lower())  # Lowercase text and tokenize with Spacy
+    tokens = [token.lemma_ for token in doc if token.is_alpha and token.text not in stop_words]  # Remove stopwords and lemmatize
+    return ' '.join(tokens)
 
 # Apply preprocessing to the dataset
 df['review'] = df['review'].apply(preprocess_text)
@@ -43,21 +49,48 @@ if not pd.api.types.is_numeric_dtype(df['label']):
 X = df['review']
 y = df['label']
 
+# Custom transformer to extract additional features
+class CustomFeatures(BaseEstimator, TransformerMixin):
+    def __init__(self, product_keywords=None):
+        self.product_keywords = product_keywords if product_keywords else {}
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X):
+        features = []
+        for review in X:
+            doc = nlp(review)
+            keyword_count = sum([1 for token in doc if token.text in self.product_keywords])
+            review_length = len(doc)
+            features.append([keyword_count, review_length])
+        return np.array(features)
+
+# Define product-specific keywords (you can update these)
+product_keywords = {
+    'battery': ['battery', 'charge', 'power', 'capacity'],
+    'mobile': ['phone', 'mobile', 'smartphone', 'android', 'iphone'],
+    'book': ['book', 'author', 'story', 'plot', 'character'],
+    # Add more product categories and keywords as needed
+}
+
 # Split the dataset into training and test sets
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Create a pipeline with TfidfVectorizer and LogisticRegression
+# Create a pipeline with TfidfVectorizer and RandomForestClassifier (better for handling complex patterns)
 pipeline = make_pipeline(
-    TfidfVectorizer(),
-    LogisticRegression(solver='liblinear', random_state=42)
+    FeatureUnion([
+        ('tfidf', TfidfVectorizer(ngram_range=(1, 2), max_df=0.75, min_df=5)),  # You can experiment with these parameters
+        ('custom_features', CustomFeatures(product_keywords=product_keywords)),
+    ]),
+    RandomForestClassifier(n_estimators=100, random_state=42)  # Experiment with different models/hyperparameters
 )
 
-# Hyperparameter tuning using GridSearchCV
+# Hyperparameter tuning using GridSearchCV (optional, to further fine-tune)
 param_grid = {
-    'tfidfvectorizer__ngram_range': [(1, 1), (1, 2)],  # Unigrams and bigrams
-    'tfidfvectorizer__max_df': [0.75, 1.0],
-    'tfidfvectorizer__min_df': [1, 5],
-    'logisticregression__C': [0.1, 1, 10]  # Regularization strength
+    'randomforestclassifier__n_estimators': [100, 200],
+    'randomforestclassifier__max_depth': [None, 10, 20],
+    'randomforestclassifier__min_samples_split': [2, 5, 10],
 }
 
 grid_search = GridSearchCV(pipeline, param_grid, cv=5, n_jobs=-1, scoring='accuracy')
@@ -103,3 +136,4 @@ def update_model(new_review, new_label):
     global calibrated_model
     calibrated_model = CalibratedClassifierCV(pipeline, method='sigmoid', cv=5)
     calibrated_model.fit(X_train, y_train)
+   
