@@ -16,7 +16,6 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.base import BaseEstimator, TransformerMixin
 import torch
 from transformers import DistilBertTokenizer, DistilBertModel
-import shap
 
 # Download necessary NLTK resources
 nltk.download('stopwords')
@@ -37,12 +36,12 @@ def preprocess_text(text):
     text = ' '.join([lemmatizer.lemmatize(word) for word in text.split() if word not in stop_words])
     return text
 
-# Convert text to BERT embeddings
-def text_to_bert(text):
-    tokens = tokenizer(text, return_tensors='pt', padding=True, truncation=True, max_length=128)
+# Convert text to BERT embeddings in batches
+def batch_text_to_bert(texts):
+    tokens = tokenizer(texts, return_tensors='pt', padding=True, truncation=True, max_length=128, is_split_into_words=False)
     with torch.no_grad():
         outputs = bert_model(**tokens)
-    return outputs.last_hidden_state.mean(dim=1).squeeze().numpy()
+    return outputs.last_hidden_state.mean(dim=1).numpy()
 
 # Custom transformer for BERT embeddings
 class BERTVectorizer(BaseEstimator, TransformerMixin):
@@ -50,7 +49,14 @@ class BERTVectorizer(BaseEstimator, TransformerMixin):
         return self
     
     def transform(self, X):
-        return np.array([text_to_bert(text) for text in X])
+        # Process texts in batches to save memory
+        batch_size = 32
+        embeddings = []
+        for i in range(0, len(X), batch_size):
+            batch_texts = X[i:i + batch_size]
+            batch_embeddings = batch_text_to_bert(batch_texts)
+            embeddings.append(batch_embeddings)
+        return np.vstack(embeddings)
 
 # Load data from CSV file
 try:
@@ -79,7 +85,7 @@ X_train_resampled = X_train_resampled.ravel()
 
 # Feature engineering pipeline using BERT embeddings and limited TF-IDF features
 feature_pipeline = FeatureUnion([
-    ('tfidf', TfidfVectorizer(max_features=3000, ngram_range=(1, 2))),  # Reduce max_features to save memory
+    ('tfidf', TfidfVectorizer(max_features=2000, ngram_range=(1, 1))),  # Further reduce max_features
     ('bert', BERTVectorizer()),  # BERT embeddings with DistilBERT
 ])
 
@@ -87,7 +93,7 @@ feature_pipeline = FeatureUnion([
 pipeline = make_pipeline(
     feature_pipeline,
     StandardScaler(),
-    TruncatedSVD(n_components=50)  # Reduce SVD components
+    TruncatedSVD(n_components=30)  # Further reduce SVD components
 )
 
 # Transform the features
@@ -95,23 +101,23 @@ X_train_transformed = pipeline.fit_transform(X_train_resampled)
 X_test_transformed = pipeline.transform(X_test)
 
 # XGBoost Classifier (with reduced depth and trees)
-xgb_model = xgb.XGBClassifier(objective='binary:logistic', random_state=42, n_estimators=100, max_depth=6)  # Reduced n_estimators and max_depth
+xgb_model = xgb.XGBClassifier(objective='binary:logistic', random_state=42, n_estimators=50, max_depth=4)  # Further reduced n_estimators and max_depth
 
 # Hyperparameter tuning using GridSearchCV (with fewer combinations)
 param_grid = {
-    'learning_rate': [0.01, 0.1],
-    'subsample': [0.8, 1.0],
-    'colsample_bytree': [0.8, 1.0]
+    'learning_rate': [0.01],
+    'subsample': [0.8],
+    'colsample_bytree': [0.8]
 }
 
-grid_search = GridSearchCV(xgb_model, param_grid, cv=3, n_jobs=-1, scoring='roc_auc')  # Reduce cross-validation folds
+grid_search = GridSearchCV(xgb_model, param_grid, cv=2, n_jobs=-1, scoring='roc_auc')  # Reduce cross-validation folds
 grid_search.fit(X_train_transformed, y_train_resampled)
 
 # Best model from GridSearch
 best_model = grid_search.best_estimator_
 
 # Calibrate the model to improve probability estimates
-calibrated_model = CalibratedClassifierCV(best_model, method='sigmoid', cv=3)  # Reduce cross-validation folds
+calibrated_model = CalibratedClassifierCV(best_model, method='sigmoid', cv=2)  # Reduce cross-validation folds
 calibrated_model.fit(X_train_transformed, y_train_resampled)
 
 # Evaluate the model on the test set
@@ -128,9 +134,10 @@ precision, recall, thresholds = precision_recall_curve(y_test, y_proba[:, 1])
 print(f'Precision: {precision}\nRecall: {recall}')
 
 # SHAP explainability (only for a small test set to save memory)
-explainer = shap.TreeExplainer(calibrated_model)
-shap_values = explainer.shap_values(X_test_transformed[:50])  # Limit to first 50 samples for memory efficiency
-shap.summary_plot(shap_values, X_test_transformed[:50])
+# Commented out to avoid memory issues
+# explainer = shap.TreeExplainer(calibrated_model)
+# shap_values = explainer.shap_values(X_test_transformed[:20])  # Limit to first 20 samples for memory efficiency
+# shap.summary_plot(shap_values, X_test_transformed[:20])
 
 # Function to predict if a review is fake or genuine
 def predict_review(review):
@@ -159,5 +166,5 @@ def update_model(new_review, new_label):
     best_model.fit(X_train_transformed, y_train_resampled)
     # Recalibrate the model
     global calibrated_model
-    calibrated_model = CalibratedClassifierCV(best_model, method='sigmoid', cv=3)
+    calibrated_model = CalibratedClassifierCV(best_model, method='sigmoid', cv=2)
     calibrated_model.fit(X_train_transformed, y_train_resampled)
