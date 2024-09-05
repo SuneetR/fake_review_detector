@@ -9,32 +9,22 @@ from sklearn.decomposition import PCA
 from sklearn.feature_extraction.text import TfidfVectorizer
 from imblearn.over_sampling import SMOTE
 from imblearn.pipeline import Pipeline as ImbPipeline
+from transformers import DistilBertTokenizer, DistilBertModel
+from sklearn.base import BaseEstimator, TransformerMixin
+import torch
+import gc
+
+# Initialize NLTK components
 import nltk
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
-import torch
-from transformers import BertTokenizer, BertModel
-from sklearn.base import BaseEstimator, TransformerMixin
-import gc
 
-# Download NLTK resources if not already available
-def download_nltk_resources():
-    try:
-        nltk.data.find('corpora/stopwords.zip')
-        nltk.data.find('corpora/wordnet.zip')
-    except LookupError:
-        nltk.download('stopwords')
-        nltk.download('wordnet')
-
-download_nltk_resources()
-
-# Initialize NLTK components
 stop_words = set(stopwords.words('english'))
 lemmatizer = WordNetLemmatizer()
 
-# Load pre-trained BERT model and tokenizer
-tokenizer = BertTokenizer.from_pretrained('distilbert-base-uncased')
-bert_model = BertModel.from_pretrained('distilbert-base-uncased')
+# Load pre-trained DistilBERT model and tokenizer
+tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased')
+distilbert_model = DistilBertModel.from_pretrained('distilbert-base-uncased')
 
 # Preprocess text function
 def preprocess_text(text):
@@ -43,35 +33,29 @@ def preprocess_text(text):
     text = ' '.join([lemmatizer.lemmatize(word) for word in text.split() if word not in stop_words])
     return text
 
-# Convert text to BERT embeddings in batches
-def text_to_bert_batch(texts):
-    tokens = tokenizer(texts, return_tensors='pt', padding=True, truncation=True, max_length=128, is_split_into_words=False)
+# Convert text to DistilBERT embeddings
+def text_to_bert(text):
+    tokens = tokenizer(text, return_tensors='pt', padding=True, truncation=True, max_length=128, clean_up_tokenization_spaces=True)
     with torch.no_grad():
-        outputs = bert_model(**tokens)
-    return outputs.last_hidden_state.mean(dim=1).numpy()
+        outputs = distilbert_model(**tokens)
+    return outputs.last_hidden_state.mean(dim=1).squeeze().numpy()
 
-# Custom transformer for BERT embeddings
+# Custom transformer for DistilBERT embeddings
 class BERTVectorizer(BaseEstimator, TransformerMixin):
     def fit(self, X, y=None):
         return self
     
     def transform(self, X):
-        batch_size = 32  # Adjust batch size based on memory constraints
-        embeddings = []
-        for i in range(0, len(X), batch_size):
-            batch_texts = X[i:i+batch_size]
-            batch_embeddings = text_to_bert_batch(batch_texts)
-            embeddings.append(batch_embeddings)
-        return np.concatenate(embeddings)
+        return np.array([text_to_bert(text) for text in X])
 
-# Load data from CSV file in chunks
-def process_chunk(chunk):
-    chunk['review'] = chunk['review'].apply(preprocess_text)
-    return chunk
+# Load data from CSV file
+try:
+    df = pd.read_csv('reviews.csv')
+except FileNotFoundError:
+    raise Exception("The file 'reviews.csv' was not found. Please make sure it's in the correct directory.")
 
-chunk_size = 10000  # Adjust chunk size based on memory constraints
-chunks = pd.read_csv('reviews.csv', chunksize=chunk_size)
-df = pd.concat(process_chunk(chunk) for chunk in chunks)
+# Apply preprocessing to the dataset
+df['review'] = df['review'].apply(preprocess_text)
 
 # Ensure 'label' column is numeric (1 for genuine, 0 for fake)
 if not pd.api.types.is_numeric_dtype(df['label']):
@@ -86,8 +70,8 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 
 # Advanced feature engineering pipeline
 feature_pipeline = Pipeline([
-    ('tfidf', TfidfVectorizer(max_features=1000, ngram_range=(1, 2))),  # Reduced features
-    ('pca', PCA(n_components=50))  # Fewer components
+    ('tfidf', TfidfVectorizer(max_features=5000, ngram_range=(1, 2))),  # Reduced features and n-grams
+    ('pca', PCA(n_components=100))  # Reduced components
 ])
 
 # Combine feature extraction with SMOTE and XGBoost in an imbalanced pipeline
