@@ -9,3 +9,4 @@ lime
 numpy
 torch
 transformers
+xgboost
