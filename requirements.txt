@@ -4,7 +4,8 @@ pandas
 nltk
 gunicorn
 imblearn
-gensim
 shap
 lime
 numpy
+torch
+transformers
