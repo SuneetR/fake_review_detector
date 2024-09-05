@@ -15,8 +15,7 @@ from sklearn.decomposition import TruncatedSVD
 from sklearn.preprocessing import StandardScaler
 from sklearn.base import BaseEstimator, TransformerMixin
 import torch
-import transformers
-from transformers import BertTokenizer, BertModel
+from transformers import DistilBertTokenizer, DistilBertModel
 import shap
 
 # Download necessary NLTK resources
@@ -27,9 +26,9 @@ nltk.download('wordnet')
 stop_words = set(stopwords.words('english'))
 lemmatizer = WordNetLemmatizer()
 
-# Load pre-trained BERT model and tokenizer
-tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-bert_model = BertModel.from_pretrained('bert-base-uncased')
+# Load pre-trained DistilBERT model and tokenizer (smaller than BERT)
+tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased')
+bert_model = DistilBertModel.from_pretrained('distilbert-base-uncased')
 
 # Preprocess text function
 def preprocess_text(text):
@@ -52,19 +51,6 @@ class BERTVectorizer(BaseEstimator, TransformerMixin):
     
     def transform(self, X):
         return np.array([text_to_bert(text) for text in X])
-
-# Product-specific keyword weighting function
-def weight_product_specific_keywords(review, product_category):
-    category_keywords = {
-        'phone': ['battery', 'screen', 'camera', 'storage'],
-        'book': ['story', 'characters', 'plot', 'quality'],
-    }
-    review_tokens = set(review.split())
-    if product_category in category_keywords:
-        common_keywords = review_tokens.intersection(category_keywords[product_category])
-        weight = len(common_keywords) / len(category_keywords[product_category])
-        return weight
-    return 0
 
 # Load data from CSV file
 try:
@@ -91,42 +77,41 @@ smote = SMOTE(random_state=42)
 X_train_resampled, y_train_resampled = smote.fit_resample(X_train.values.reshape(-1, 1), y_train)
 X_train_resampled = X_train_resampled.ravel()
 
-# Feature engineering pipeline using BERT embeddings
+# Feature engineering pipeline using BERT embeddings and limited TF-IDF features
 feature_pipeline = FeatureUnion([
-    ('tfidf', TfidfVectorizer(max_features=5000, ngram_range=(1, 2))),
-    ('bert', BERTVectorizer()),  # Replacing GloVe with BERT embeddings
+    ('tfidf', TfidfVectorizer(max_features=3000, ngram_range=(1, 2))),  # Reduce max_features to save memory
+    ('bert', BERTVectorizer()),  # BERT embeddings with DistilBERT
 ])
 
 # Combine features with scaling and dimensionality reduction (optional)
 pipeline = make_pipeline(
     feature_pipeline,
     StandardScaler(),
-    TruncatedSVD(n_components=100)
+    TruncatedSVD(n_components=50)  # Reduce SVD components
 )
 
 # Transform the features
 X_train_transformed = pipeline.fit_transform(X_train_resampled)
 X_test_transformed = pipeline.transform(X_test)
 
-# XGBoost Classifier
-xgb_model = xgb.XGBClassifier(objective='binary:logistic', random_state=42, n_estimators=200)
+# XGBoost Classifier (with reduced depth and trees)
+xgb_model = xgb.XGBClassifier(objective='binary:logistic', random_state=42, n_estimators=100, max_depth=6)  # Reduced n_estimators and max_depth
 
-# Hyperparameter tuning using GridSearchCV
+# Hyperparameter tuning using GridSearchCV (with fewer combinations)
 param_grid = {
-    'learning_rate': [0.01, 0.1, 0.2],
-    'max_depth': [6, 10, 15],
+    'learning_rate': [0.01, 0.1],
     'subsample': [0.8, 1.0],
     'colsample_bytree': [0.8, 1.0]
 }
 
-grid_search = GridSearchCV(xgb_model, param_grid, cv=5, n_jobs=-1, scoring='roc_auc')
+grid_search = GridSearchCV(xgb_model, param_grid, cv=3, n_jobs=-1, scoring='roc_auc')  # Reduce cross-validation folds
 grid_search.fit(X_train_transformed, y_train_resampled)
 
 # Best model from GridSearch
 best_model = grid_search.best_estimator_
 
 # Calibrate the model to improve probability estimates
-calibrated_model = CalibratedClassifierCV(best_model, method='sigmoid', cv=5)
+calibrated_model = CalibratedClassifierCV(best_model, method='sigmoid', cv=3)  # Reduce cross-validation folds
 calibrated_model.fit(X_train_transformed, y_train_resampled)
 
 # Evaluate the model on the test set
@@ -142,10 +127,10 @@ print("ROC AUC Score:", roc_auc_score(y_test, y_proba[:, 1]))
 precision, recall, thresholds = precision_recall_curve(y_test, y_proba[:, 1])
 print(f'Precision: {precision}\nRecall: {recall}')
 
-# SHAP explainability
+# SHAP explainability (only for a small test set to save memory)
 explainer = shap.TreeExplainer(calibrated_model)
-shap_values = explainer.shap_values(X_test_transformed)
-shap.summary_plot(shap_values, X_test_transformed)
+shap_values = explainer.shap_values(X_test_transformed[:50])  # Limit to first 50 samples for memory efficiency
+shap.summary_plot(shap_values, X_test_transformed[:50])
 
 # Function to predict if a review is fake or genuine
 def predict_review(review):
@@ -174,5 +159,5 @@ def update_model(new_review, new_label):
     best_model.fit(X_train_transformed, y_train_resampled)
     # Recalibrate the model
     global calibrated_model
-    calibrated_model = CalibratedClassifierCV(best_model, method='sigmoid', cv=5)
+    calibrated_model = CalibratedClassifierCV(best_model, method='sigmoid', cv=3)
     calibrated_model.fit(X_train_transformed, y_train_resampled)
