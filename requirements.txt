@@ -3,3 +3,9 @@ scikit-learn
 pandas
 nltk
 gunicorn
+xgboost
+imblearn
+gensim
+shap
+lime
+numpy
