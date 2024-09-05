@@ -10,14 +10,14 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from imblearn.over_sampling import SMOTE
-from gensim.models import KeyedVectors
 from sklearn.pipeline import make_pipeline, FeatureUnion
 from sklearn.decomposition import TruncatedSVD
 from sklearn.preprocessing import StandardScaler
 from sklearn.base import BaseEstimator, TransformerMixin
+import torch
+import transformers
+from transformers import BertTokenizer, BertModel
 import shap
-import lime
-import lime.lime_text
 
 # Download necessary NLTK resources
 nltk.download('stopwords')
@@ -27,44 +27,44 @@ nltk.download('wordnet')
 stop_words = set(stopwords.words('english'))
 lemmatizer = WordNetLemmatizer()
 
-# Load GloVe embeddings (assuming glove.6B.100d.txt is in your directory)
-def load_glove_embeddings(file_path):
-    embeddings_index = {}
-    with open(file_path, 'r', encoding='utf-8') as f:
-        for line in f:
-            values = line.split()
-            word = values[0]
-            coefs = np.asarray(values[1:], dtype='float32')
-            embeddings_index[word] = coefs
-    return embeddings_index
+# Load pre-trained BERT model and tokenizer
+tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+bert_model = BertModel.from_pretrained('bert-base-uncased')
 
-# Assuming glove.6B.100d.txt is downloaded and located in your directory
-glove_embeddings = load_glove_embeddings('glove/glove.6B.100d.txt')
-
-# Data preprocessing function
+# Preprocess text function
 def preprocess_text(text):
-    text = text.lower()  # Lowercase text
-    text = ''.join([char for char in text if char not in string.punctuation])  # Remove punctuation
-    text = ' '.join([lemmatizer.lemmatize(word) for word in text.split() if word not in stop_words])  # Remove stopwords and lemmatize
+    text = text.lower()
+    text = ''.join([char for char in text if char not in string.punctuation])
+    text = ' '.join([lemmatizer.lemmatize(word) for word in text.split() if word not in stop_words])
     return text
 
-# Function to convert text to GloVe embeddings
-def text_to_glove(text, embeddings, dim=100):
-    words = text.split()
-    word_vecs = [embeddings.get(word, np.zeros(dim)) for word in words]
-    return np.mean(word_vecs, axis=0)
+# Convert text to BERT embeddings
+def text_to_bert(text):
+    tokens = tokenizer(text, return_tensors='pt', padding=True, truncation=True, max_length=128)
+    with torch.no_grad():
+        outputs = bert_model(**tokens)
+    return outputs.last_hidden_state.mean(dim=1).squeeze().numpy()
 
-# Custom transformer for GloVe embeddings
-class GloveVectorizer(BaseEstimator, TransformerMixin):
-    def __init__(self, embeddings, dim=100):
-        self.embeddings = embeddings
-        self.dim = dim
-        
+# Custom transformer for BERT embeddings
+class BERTVectorizer(BaseEstimator, TransformerMixin):
     def fit(self, X, y=None):
         return self
     
     def transform(self, X):
-        return np.array([text_to_glove(text, self.embeddings, self.dim) for text in X])
+        return np.array([text_to_bert(text) for text in X])
+
+# Product-specific keyword weighting function
+def weight_product_specific_keywords(review, product_category):
+    category_keywords = {
+        'phone': ['battery', 'screen', 'camera', 'storage'],
+        'book': ['story', 'characters', 'plot', 'quality'],
+    }
+    review_tokens = set(review.split())
+    if product_category in category_keywords:
+        common_keywords = review_tokens.intersection(category_keywords[product_category])
+        weight = len(common_keywords) / len(category_keywords[product_category])
+        return weight
+    return 0
 
 # Load data from CSV file
 try:
@@ -91,10 +91,10 @@ smote = SMOTE(random_state=42)
 X_train_resampled, y_train_resampled = smote.fit_resample(X_train.values.reshape(-1, 1), y_train)
 X_train_resampled = X_train_resampled.ravel()
 
-# Feature engineering pipeline
+# Feature engineering pipeline using BERT embeddings
 feature_pipeline = FeatureUnion([
     ('tfidf', TfidfVectorizer(max_features=5000, ngram_range=(1, 2))),
-    ('glove', GloveVectorizer(embeddings=glove_embeddings, dim=100)),
+    ('bert', BERTVectorizer()),  # Replacing GloVe with BERT embeddings
 ])
 
 # Combine features with scaling and dimensionality reduction (optional)
@@ -162,7 +162,7 @@ def predict_review(review):
 
 # Self-learning function to update the model with new data
 def update_model(new_review, new_label):
-    global X_train, y_train
+    global X_train_transformed, y_train_resampled
     # Preprocess the new review
     preprocessed_review = preprocess_text(new_review)
     # Transform the new review to features
