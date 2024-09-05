@@ -43,12 +43,12 @@ def preprocess_text(text):
     text = ' '.join([lemmatizer.lemmatize(word) for word in text.split() if word not in stop_words])
     return text
 
-# Convert text to BERT embeddings
-def text_to_bert(text):
-    tokens = tokenizer(text, return_tensors='pt', padding=True, truncation=True, max_length=128)
+# Convert text to BERT embeddings in batches
+def text_to_bert_batch(texts):
+    tokens = tokenizer(texts, return_tensors='pt', padding=True, truncation=True, max_length=128, is_split_into_words=False)
     with torch.no_grad():
         outputs = bert_model(**tokens)
-    return outputs.last_hidden_state.mean(dim=1).squeeze().numpy()
+    return outputs.last_hidden_state.mean(dim=1).numpy()
 
 # Custom transformer for BERT embeddings
 class BERTVectorizer(BaseEstimator, TransformerMixin):
@@ -56,16 +56,22 @@ class BERTVectorizer(BaseEstimator, TransformerMixin):
         return self
     
     def transform(self, X):
-        return np.array([text_to_bert(text) for text in X])
+        batch_size = 32  # Adjust batch size based on memory constraints
+        embeddings = []
+        for i in range(0, len(X), batch_size):
+            batch_texts = X[i:i+batch_size]
+            batch_embeddings = text_to_bert_batch(batch_texts)
+            embeddings.append(batch_embeddings)
+        return np.concatenate(embeddings)
 
-# Load data from CSV file
-try:
-    df = pd.read_csv('reviews.csv')
-except FileNotFoundError:
-    raise Exception("The file 'reviews.csv' was not found. Please make sure it's in the correct directory.")
+# Load data from CSV file in chunks
+def process_chunk(chunk):
+    chunk['review'] = chunk['review'].apply(preprocess_text)
+    return chunk
 
-# Apply preprocessing to the dataset
-df['review'] = df['review'].apply(preprocess_text)
+chunk_size = 10000  # Adjust chunk size based on memory constraints
+chunks = pd.read_csv('reviews.csv', chunksize=chunk_size)
+df = pd.concat(process_chunk(chunk) for chunk in chunks)
 
 # Ensure 'label' column is numeric (1 for genuine, 0 for fake)
 if not pd.api.types.is_numeric_dtype(df['label']):
@@ -80,8 +86,8 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 
 # Advanced feature engineering pipeline
 feature_pipeline = Pipeline([
-    ('tfidf', TfidfVectorizer(max_features=5000, ngram_range=(1, 2))),  # Reduced features and n-grams
-    ('pca', PCA(n_components=100))  # Reduced components
+    ('tfidf', TfidfVectorizer(max_features=1000, ngram_range=(1, 2))),  # Reduced features
+    ('pca', PCA(n_components=50))  # Fewer components
 ])
 
 # Combine feature extraction with SMOTE and XGBoost in an imbalanced pipeline
