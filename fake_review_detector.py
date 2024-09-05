@@ -2,7 +2,6 @@ import string
 import nltk
 import pandas as pd
 import numpy as np
-import xgboost as xgb
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.metrics import classification_report, accuracy_score, f1_score, roc_auc_score, precision_recall_curve
 from sklearn.calibration import CalibratedClassifierCV
@@ -10,12 +9,11 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from imblearn.over_sampling import SMOTE
-from sklearn.pipeline import make_pipeline, FeatureUnion
+from sklearn.pipeline import Pipeline
 from sklearn.decomposition import TruncatedSVD
 from sklearn.preprocessing import StandardScaler
 from sklearn.base import BaseEstimator, TransformerMixin
-import torch
-from transformers import DistilBertTokenizer, DistilBertModel
+import xgboost as xgb
 
 # Download necessary NLTK resources
 nltk.download('stopwords')
@@ -25,38 +23,12 @@ nltk.download('wordnet')
 stop_words = set(stopwords.words('english'))
 lemmatizer = WordNetLemmatizer()
 
-# Load pre-trained DistilBERT model and tokenizer (smaller than BERT)
-tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased')
-bert_model = DistilBertModel.from_pretrained('distilbert-base-uncased')
-
 # Preprocess text function
 def preprocess_text(text):
     text = text.lower()
     text = ''.join([char for char in text if char not in string.punctuation])
     text = ' '.join([lemmatizer.lemmatize(word) for word in text.split() if word not in stop_words])
     return text
-
-# Convert text to BERT embeddings in batches
-def batch_text_to_bert(texts):
-    tokens = tokenizer(texts, return_tensors='pt', padding=True, truncation=True, max_length=128, is_split_into_words=False)
-    with torch.no_grad():
-        outputs = bert_model(**tokens)
-    return outputs.last_hidden_state.mean(dim=1).numpy()
-
-# Custom transformer for BERT embeddings
-class BERTVectorizer(BaseEstimator, TransformerMixin):
-    def fit(self, X, y=None):
-        return self
-    
-    def transform(self, X):
-        # Process texts in batches to save memory
-        batch_size = 32
-        embeddings = []
-        for i in range(0, len(X), batch_size):
-            batch_texts = X[i:i + batch_size]
-            batch_embeddings = batch_text_to_bert(batch_texts)
-            embeddings.append(batch_embeddings)
-        return np.vstack(embeddings)
 
 # Load data from CSV file
 try:
@@ -83,29 +55,22 @@ smote = SMOTE(random_state=42)
 X_train_resampled, y_train_resampled = smote.fit_resample(X_train.values.reshape(-1, 1), y_train)
 X_train_resampled = X_train_resampled.ravel()
 
-# Feature engineering pipeline using BERT embeddings and limited TF-IDF features
-feature_pipeline = FeatureUnion([
-    ('tfidf', TfidfVectorizer(max_features=2000, ngram_range=(1, 1))),  # Further reduce max_features
-    ('bert', BERTVectorizer()),  # BERT embeddings with DistilBERT
+# Feature engineering pipeline using TF-IDF and optional dimensionality reduction
+feature_pipeline = Pipeline([
+    ('tfidf', TfidfVectorizer(max_features=1000, ngram_range=(1, 1))),  # Reduce features
+    ('svd', TruncatedSVD(n_components=50))  # Reduce SVD components
 ])
 
-# Combine features with scaling and dimensionality reduction (optional)
-pipeline = make_pipeline(
-    feature_pipeline,
-    StandardScaler(),
-    TruncatedSVD(n_components=30)  # Further reduce SVD components
-)
-
 # Transform the features
-X_train_transformed = pipeline.fit_transform(X_train_resampled)
-X_test_transformed = pipeline.transform(X_test)
+X_train_transformed = feature_pipeline.fit_transform(X_train_resampled)
+X_test_transformed = feature_pipeline.transform(X_test)
 
-# XGBoost Classifier (with reduced depth and trees)
-xgb_model = xgb.XGBClassifier(objective='binary:logistic', random_state=42, n_estimators=50, max_depth=4)  # Further reduced n_estimators and max_depth
+# XGBoost Classifier (further reduced parameters)
+xgb_model = xgb.XGBClassifier(objective='binary:logistic', random_state=42, n_estimators=30, max_depth=3)  # Reduce complexity
 
-# Hyperparameter tuning using GridSearchCV (with fewer combinations)
+# Hyperparameter tuning using GridSearchCV (reduced grid size)
 param_grid = {
-    'learning_rate': [0.01],
+    'learning_rate': [0.1],
     'subsample': [0.8],
     'colsample_bytree': [0.8]
 }
@@ -133,18 +98,12 @@ print("ROC AUC Score:", roc_auc_score(y_test, y_proba[:, 1]))
 precision, recall, thresholds = precision_recall_curve(y_test, y_proba[:, 1])
 print(f'Precision: {precision}\nRecall: {recall}')
 
-# SHAP explainability (only for a small test set to save memory)
-# Commented out to avoid memory issues
-# explainer = shap.TreeExplainer(calibrated_model)
-# shap_values = explainer.shap_values(X_test_transformed[:20])  # Limit to first 20 samples for memory efficiency
-# shap.summary_plot(shap_values, X_test_transformed[:20])
-
 # Function to predict if a review is fake or genuine
 def predict_review(review):
     # Preprocess the review
     preprocessed_review = preprocess_text(review)
     # Transform the review to features
-    transformed_review = pipeline.transform([preprocessed_review])
+    transformed_review = feature_pipeline.transform([preprocessed_review])
     # Predict
     prediction = calibrated_model.predict(transformed_review)[0]
     confidence = calibrated_model.predict_proba(transformed_review)[0].max() * 100
@@ -158,7 +117,7 @@ def update_model(new_review, new_label):
     # Preprocess the new review
     preprocessed_review = preprocess_text(new_review)
     # Transform the new review to features
-    transformed_review = pipeline.transform([preprocessed_review])
+    transformed_review = feature_pipeline.transform([preprocessed_review])
     # Append new data to the training set
     X_train_transformed = np.vstack([X_train_transformed, transformed_review])
     y_train_resampled = np.append(y_train_resampled, new_label)
