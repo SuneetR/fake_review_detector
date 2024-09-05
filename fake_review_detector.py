@@ -9,6 +9,7 @@ from sklearn.decomposition import PCA
 from sklearn.feature_extraction.text import TfidfVectorizer
 from imblearn.over_sampling import SMOTE
 from imblearn.pipeline import Pipeline as ImbPipeline
+import nltk
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 import torch
