@@ -17,6 +17,17 @@ from transformers import BertTokenizer, BertModel
 from sklearn.base import BaseEstimator, TransformerMixin
 import gc
 
+# Download NLTK resources if not already available
+def download_nltk_resources():
+    try:
+        nltk.data.find('corpora/stopwords.zip')
+        nltk.data.find('corpora/wordnet.zip')
+    except LookupError:
+        nltk.download('stopwords')
+        nltk.download('wordnet')
+
+download_nltk_resources()
+
 # Initialize NLTK components
 stop_words = set(stopwords.words('english'))
 lemmatizer = WordNetLemmatizer()
