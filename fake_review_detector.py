@@ -39,7 +39,7 @@ def load_glove_embeddings(file_path):
     return embeddings_index
 
 # Assuming glove.6B.100d.txt is downloaded and located in your directory
-glove_embeddings = load_glove_embeddings('glove.6B.100d.txt')
+glove_embeddings = load_glove_embeddings('glove/glove.6B.100d.txt')
 
 # Data preprocessing function
 def preprocess_text(text):
