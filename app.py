@@ -2,6 +2,8 @@ from flask import Flask, request, render_template, redirect, url_for
 from fake_review_detector import predict_review, update_model  # Import the necessary functions
 import os
 import logging
+import torch
+from transformers import BertTokenizer, BertModel
 
 app = Flask(__name__)
 
@@ -11,6 +13,14 @@ logging.basicConfig(filename='app.log', level=logging.INFO, format='%(asctime)s 
 # Define paths for storing feedback and reviews
 FEEDBACK_FILE_PATH = 'feedback.txt'
 REVIEWS_FILE_PATH = 'reviews.txt'
+
+# Load BERT model and tokenizer globally to avoid reloading on each request
+tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+bert_model = BertModel.from_pretrained('bert-base-uncased')
+
+# Ensure BERT model is loaded on GPU if available
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+bert_model.to(device)
 
 def store_feedback(feedback):
     """Store feedback in a file."""
@@ -38,6 +48,7 @@ def home():
 def predict():
     review = request.form['review']
     try:
+        # Use BERT tokenizer and model loaded globally
         result, confidence = predict_review(review)
         logging.info(f"Prediction made: {result}, Confidence: {confidence}")
         return render_template('index.html', prediction=result, confidence=confidence)
