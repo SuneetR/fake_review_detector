@@ -15,6 +15,10 @@ from torch.nn.functional import softmax
 from scipy.sparse import hstack
 from nltk.corpus import stopwords
 import random
+from sklearn.model_selection import cross_val_score
+from gensim.models import Word2Vec
+from scipy.sparse import csr_matrix
+
 
 # Download required NLTK resources
 nltk.download('stopwords')
