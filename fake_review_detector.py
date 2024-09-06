@@ -14,9 +14,13 @@ from nltk.tokenize import word_tokenize
 from sentence_transformers import SentenceTransformer
 import joblib
 
-# Download required NLTK resources
+# Download required NLTK resources with error handling
+try:
+    nltk.data.find('tokenizers/punkt')
+except LookupError:
+    nltk.download('punkt')
+
 nltk.download('stopwords')
-nltk.download('punkt')
 
 stop_words = set(stopwords.words('english'))
 
