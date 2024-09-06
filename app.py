@@ -2,6 +2,7 @@ from flask import Flask, request, render_template, redirect, url_for
 from fake_review_detector import predict_review, update_model  # Import prediction and model update functions
 import os
 import nltk
+import logging
 
 # Ensure only necessary NLTK resources are downloaded
 try:
@@ -21,19 +22,31 @@ except LookupError:
 
 app = Flask(__name__)
 
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 # Define paths for storing feedback and reviews
 FEEDBACK_FILE_PATH = 'feedback.txt'
 REVIEWS_FILE_PATH = 'reviews.txt'
 
 def store_feedback(feedback):
     """Store feedback in a file."""
-    with open(FEEDBACK_FILE_PATH, 'a') as f:
-        f.write(f"{feedback}\n")
+    try:
+        with open(FEEDBACK_FILE_PATH, 'a') as f:
+            f.write(f"{feedback}\n")
+        logger.info(f"Feedback stored: {feedback}")
+    except Exception as e:
+        logger.error(f"Error storing feedback: {e}")
 
 def store_review(review, review_type):
     """Store review contributions in a file."""
-    with open(REVIEWS_FILE_PATH, 'a') as f:
-        f.write(f"Review: {review}, Type: {review_type}\n")
+    try:
+        with open(REVIEWS_FILE_PATH, 'a') as f:
+            f.write(f"Review: {review}, Type: {review_type}\n")
+        logger.info(f"Review stored: {review}, Type: {review_type}")
+    except Exception as e:
+        logger.error(f"Error storing review: {e}")
 
 @app.route('/')
 def home():
@@ -58,6 +71,7 @@ def predict():
 
     except Exception as e:
         # Handle any errors that occur during prediction
+        logger.error(f"Error during prediction: {e}")
         return render_template('index.html', error=f"An error occurred during prediction: {str(e)}")
 
 @app.route('/submit_feedback', methods=['POST'])
@@ -66,9 +80,9 @@ def submit_feedback():
 
     if feedback:
         store_feedback(feedback)
-        print(f"Received feedback: {feedback}")
+        logger.info(f"Received feedback: {feedback}")
     else:
-        print("No feedback provided.")
+        logger.info("No feedback provided.")
 
     return redirect(url_for('home'))
 
@@ -90,11 +104,12 @@ def submit_review():
         new_label = 1 if review_type.lower() == 'fake' else 0
         update_model(review, new_label)
 
-        print(f"Received review: {review}, Type: {review_type}, Model Updated")
+        logger.info(f"Received review: {review}, Type: {review_type}, Model Updated")
         return redirect(url_for('home'))
 
     except Exception as e:
         # Handle any errors that occur during model update
+        logger.error(f"Error while updating the model: {e}")
         return render_template('index.html', error=f"An error occurred while updating the model: {str(e)}")
 
 if __name__ == '__main__':
