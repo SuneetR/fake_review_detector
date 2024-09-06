@@ -79,8 +79,9 @@ def train_model(reviews, labels):
     gc.collect()
 
 # Prediction function
+# Updated Prediction function
 def predict_review(review):
-    # Preprocess review
+    # Preprocess the review
     cleaned_review = preprocess_text(review)
     
     # Generate embeddings and transform features
@@ -90,11 +91,24 @@ def predict_review(review):
     # Combine features
     combined_features = np.hstack((tfidf_features.toarray(), sbert_embedding))
     
-    # Make predictions
-    prediction = stacking_model.predict(combined_features)[0]
-    confidence = max(stacking_model.predict_proba(combined_features)[0])
-
+    # Get prediction probabilities
+    probabilities = stacking_model.predict_proba(combined_features)[0]  # [prob_genuine, prob_fake]
+    
+    # Extract probabilities for each class
+    prob_genuine = probabilities[0]  # Probability of genuine (class 0)
+    prob_fake = probabilities[1]     # Probability of fake (class 1)
+    
+    # Assign labels based on higher probability
+    if prob_fake > prob_genuine:
+        prediction = "Fake"
+        confidence = round(prob_fake * 100, 2)  # Convert to percentage with 2 decimal places
+    else:
+        prediction = "Genuine"
+        confidence = round(prob_genuine * 100, 2)  # Convert to percentage with 2 decimal places
+    
+    # Return the prediction and confidence
     return prediction, confidence
+
 
 # Evaluation function
 def evaluate_model(reviews, labels):
