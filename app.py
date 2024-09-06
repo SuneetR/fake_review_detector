@@ -42,11 +42,16 @@ def predict():
     if not review:
         return render_template('index.html', error="Please provide a review.")
 
-    # Call the prediction function
-    result, confidence = predict_review(review, product_type)
-    
-    # Render template with prediction results
-    return render_template('index.html', prediction=result, confidence=confidence)
+    try:
+        # Call the prediction function
+        result, confidence = predict_review(review, product_type)
+
+        # Render template with prediction results
+        return render_template('index.html', prediction=result, confidence=f"{confidence:.2f}")
+
+    except Exception as e:
+        # Handle any errors that occur during prediction
+        return render_template('index.html', error=f"An error occurred during prediction: {str(e)}")
 
 
 @app.route('/submit_feedback', methods=['POST'])
@@ -71,17 +76,21 @@ def submit_review():
     if not review or not review_type:
         return render_template('index.html', error="Please provide both review and review type.")
 
-    # Store the review and its type (fake or genuine)
-    store_review(review, review_type)
+    try:
+        # Store the review and its type (fake or genuine)
+        store_review(review, review_type)
 
-    # Update the model with the new review and its type
-    # Assuming 'fake' = 1 and 'genuine' = 0
-    new_label = 1 if review_type.lower() == 'fake' else 0
-    update_model(review, new_label)
-    
-    print(f"Received review: {review}, Type: {review_type}, Model Updated")
+        # Update the model with the new review and its type
+        # Assuming 'fake' = 1 and 'genuine' = 0
+        new_label = 1 if review_type.lower() == 'fake' else 0
+        update_model(review, new_label)
 
-    return redirect(url_for('home'))
+        print(f"Received review: {review}, Type: {review_type}, Model Updated")
+        return redirect(url_for('home'))
+
+    except Exception as e:
+        # Handle any errors that occur during model update
+        return render_template('index.html', error=f"An error occurred while updating the model: {str(e)}")
 
 
 if __name__ == '__main__':
