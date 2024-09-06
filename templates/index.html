@@ -626,28 +626,28 @@
         }
         // Handle form submission with AJAX
 document.addEventListener('DOMContentLoaded', function() {
-    const form = document.querySelector('#fake-review-form form');
-    const resultContainer = document.querySelector('.result-container');
-    const pieChart = document.querySelector('.pie-chart');
-    
-    const form = document.getElementById('review-form');
-    const resultContainer = document.getElementById('result-container');
+    // Ensure only one form and result container are selected
+    const form = document.getElementById('fake-review-form');  // Changed to select the form with the correct ID
+    const resultContainer = document.getElementById('result-container'); // Correct ID for result container
 
+    // Handle form submission
     form.addEventListener('submit', function(event) {
         event.preventDefault();
+        
+        // Get the review text from the form
         const review = form.querySelector('textarea').value;
         
-        // Simulate an AJAX request
+        // Simulate an AJAX request (you should replace this with your actual API call)
         setTimeout(() => {
-            // Replace with actual prediction and confidence data
+            // Replace with actual prediction and confidence data from your backend model
             const prediction = Math.random() > 0.5 ? 'Genuine' : 'Fake'; // Simulate random prediction
             const confidence = Math.random() * 100;
 
             // Determine pie chart colors based on prediction
             const mainColor = prediction === 'Genuine' ? '#4CAF50' : '#f44336'; // Green for Genuine, Red for Fake
-            const secondaryColor = prediction === 'Genuine' ? '#f44336' : '#4CAF50'; // Red for Genuine, Green for Fake
+            const secondaryColor = prediction === 'Genuine' ? '#f44336' : '#4CAF50'; // Red for Fake, Green for Genuine
 
-            // Update result container
+            // Update result container with prediction and confidence
             resultContainer.innerHTML = `
                 <h2>Prediction: ${prediction}</h2>
                 <h3>Confidence: ${confidence.toFixed(2)}%</h3>
@@ -655,7 +655,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     ${confidence.toFixed(2)}%
                 </div>
             `;
-        }, 1000);
+        }, 1000); // Simulate the delay for an AJAX call
     });
 });
 
