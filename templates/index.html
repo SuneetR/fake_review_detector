@@ -630,6 +630,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const resultContainer = document.querySelector('.result-container');
     const pieChart = document.querySelector('.pie-chart');
     
+    const form = document.getElementById('review-form');
+    const resultContainer = document.getElementById('result-container');
+
     form.addEventListener('submit', function(event) {
         event.preventDefault();
         const review = form.querySelector('textarea').value;
@@ -637,18 +640,22 @@ document.addEventListener('DOMContentLoaded', function() {
         // Simulate an AJAX request
         setTimeout(() => {
             // Replace with actual prediction and confidence data
-            const prediction = 'Fake'; // or 'Real'
+            const prediction = Math.random() > 0.5 ? 'Genuine' : 'Fake'; // Simulate random prediction
             const confidence = Math.random() * 100;
+
+            // Determine pie chart colors based on prediction
+            const mainColor = prediction === 'Genuine' ? '#4CAF50' : '#f44336'; // Green for Genuine, Red for Fake
+            const secondaryColor = prediction === 'Genuine' ? '#f44336' : '#4CAF50'; // Red for Genuine, Green for Fake
 
             // Update result container
             resultContainer.innerHTML = `
                 <h2>Prediction: ${prediction}</h2>
                 <h3>Confidence: ${confidence.toFixed(2)}%</h3>
-                <div class="pie-chart" style="background-image: conic-gradient(#4CAF50 0% ${confidence.toFixed(2)}%, #f44336 ${confidence.toFixed(2)}% 100%);">
+                <div class="pie-chart" style="background-image: conic-gradient(${mainColor} 0% ${confidence.toFixed(2)}%, ${secondaryColor} ${confidence.toFixed(2)}% 100%);">
                     ${confidence.toFixed(2)}%
                 </div>
             `;
-        }, 1000); // Simulate network delay
+        }, 1000);
     });
 });
 
