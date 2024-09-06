@@ -3,9 +3,13 @@ from fake_review_detector import predict_review, update_model  # Import predicti
 import os
 import nltk
 
-# Download required NLTK resources
+# Download required NLTK resources with error handling
+try:
+    nltk.data.find('tokenizers/punkt')
+except LookupError:
+    nltk.download('punkt')
+
 nltk.download('stopwords')
-nltk.download('punkt')
 nltk.download('wordnet')
 
 app = Flask(__name__)
