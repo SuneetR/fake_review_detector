@@ -1,6 +1,12 @@
 from flask import Flask, request, render_template, redirect, url_for
 from fake_review_detector import predict_review, update_model  # Import prediction and model update functions
 import os
+import nltk
+
+# Download required NLTK resources
+nltk.download('stopwords')
+nltk.download('punkt')
+nltk.download('wordnet')
 
 app = Flask(__name__)
 
