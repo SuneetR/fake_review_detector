@@ -12,16 +12,11 @@ from sklearn.decomposition import PCA
 import string
 from nltk.corpus import stopwords
 from sentence_transformers import SentenceTransformer
-import joblib
 import gc
+import logging
 
 nltk.download('stopwords')
 stop_words = set(stopwords.words('english'))
-
-# Lazy loaded models
-stacking_model = None
-tfidf_vectorizer = None
-pca = None
 
 # Tokenizer
 def basic_tokenize(text):
@@ -46,18 +41,19 @@ def get_sbert_embeddings(text_data, batch_size=32):
         embeddings.append(batch_embeddings)
     return np.vstack(embeddings)
 
-# Load models
-def load_models():
-    global stacking_model, tfidf_vectorizer, pca
-    if stacking_model is None:
-        stacking_model = joblib.load('optimized_fake_review_detector_model.pkl')
-        tfidf_vectorizer = joblib.load('tfidf_vectorizer.pkl')
-        pca = joblib.load('pca.pkl')
+# Directly instantiate models instead of loading .pkl files
+tfidf_vectorizer = TfidfVectorizer(max_features=5000)
+pca = PCA(n_components=100)
+stacking_model = StackingClassifier(
+    estimators=[
+        ('lr', LogisticRegression()),
+        ('xgb', XGBClassifier(use_label_encoder=False, eval_metric='logloss'))
+    ],
+    final_estimator=LogisticRegression()
+)
 
 # Prediction function
 def predict_review(review, product_type=None):
-    load_models()
-    
     # Preprocess review
     cleaned_review = preprocess_text(review)
     
@@ -83,15 +79,13 @@ def predict_review(review, product_type=None):
 
 # Model update function
 def update_model(review, label):
-    load_models()
-
-    # Preprocess and append to the training dataset (or implement online learning)
     # This part requires a mechanism to retrain the model incrementally
     pass
 
 # Evaluation function
 def evaluate_model(X_test, y_test):
-    load_models()
+    logging.basicConfig(level=logging.INFO)
+    logging.info("Starting evaluation...")
     
     # Predict on test set
     y_pred = stacking_model.predict(X_test)
@@ -104,13 +98,13 @@ def evaluate_model(X_test, y_test):
     f1 = f1_score(y_test, y_pred)
     conf_matrix = confusion_matrix(y_test, y_pred)
     
-    # Print metrics
-    print(f'Accuracy: {accuracy:.4f}')
-    print(f'Precision: {precision:.4f}')
-    print(f'Recall: {recall:.4f}')
-    print(f'F1 Score: {f1:.4f}')
-    print(f'Confusion Matrix:\n{conf_matrix}')
-
+    # Log metrics
+    logging.info(f'Accuracy: {accuracy:.4f}')
+    logging.info(f'Precision: {precision:.4f}')
+    logging.info(f'Recall: {recall:.4f}')
+    logging.info(f'F1 Score: {f1:.4f}')
+    logging.info(f'Confusion Matrix:\n{conf_matrix}')
+    
     return accuracy, precision, recall, f1, conf_matrix
 
 # Example usage
@@ -119,8 +113,4 @@ if __name__ == "__main__":
     # X_test = ... (Feature matrix for test data)
     # y_test = ... (True labels for test data)
     # evaluate_model(X_test, y_test)
-    
-    # Example for prediction
-    review = "This product is amazing and I loved it!"
-    prediction, confidence = predict_review(review)
-    print(f'Prediction: {prediction}, Confidence: {confidence:.4f}')
+    pass
