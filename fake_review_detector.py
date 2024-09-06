@@ -10,26 +10,31 @@ from xgboost import XGBClassifier
 from scipy.sparse import hstack, csr_matrix
 import string
 from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
 from sentence_transformers import SentenceTransformer
 import joblib
+from nltk.tokenize import word_tokenize
 
-# Download required NLTK resources
+# Download only the necessary resources
 nltk.download('stopwords')
-nltk.download('punkt')  # Only download 'punkt', since this is all you need for tokenization
 
-# Load stopwords from NLTK
 stop_words = set(stopwords.words('english'))
+
+# Use a basic tokenizer instead of relying on NLTK's Punkt
+def basic_tokenize(text):
+    """Manually tokenize by splitting words and removing punctuation."""
+    tokens = text.lower().split()  # Split words manually
+    tokens = [word.strip(string.punctuation) for word in tokens]  # Remove punctuation manually
+    return tokens
+
+# Preprocessing function
+def preprocess_text(text):
+    tokens = basic_tokenize(text)  # Use custom tokenizer
+    cleaned_tokens = [word for word in tokens if word not in stop_words]
+    return ' '.join(cleaned_tokens)
 
 # Load the dataset
 data = pd.read_csv('reviews.csv')  # Replace with your dataset path
 data['label'] = data['label'].map({'fake': 0, 'genuine': 1})  # Adjust according to your dataset
-
-# Preprocessing function
-def preprocess_text(text):
-    tokens = word_tokenize(text.lower())  # Tokenize the text
-    cleaned_tokens = [word for word in tokens if word not in stop_words and word not in string.punctuation]  # Remove stopwords and punctuation
-    return ' '.join(cleaned_tokens)
 
 # Apply preprocessing
 data['cleaned_review'] = data['review'].apply(preprocess_text)
