@@ -11,6 +11,7 @@ except LookupError:
 
 nltk.download('stopwords')
 nltk.download('wordnet')
+nltk.download('punkt_tab')
 
 app = Flask(__name__)
 
