@@ -96,5 +96,7 @@ y_pred = stacking_model.predict(X_test_combined)
 f1 = f1_score(y_test, y_pred, average='weighted')
 print(f"Optimized F1 score: {f1:.4f}")
 
-# Save the model
+# Save the trained model, vectorizer, and PCA
 joblib.dump(stacking_model, 'optimized_fake_review_detector_model.pkl')
+joblib.dump(tfidf_vectorizer, 'tfidf_vectorizer.pkl')
+joblib.dump(pca, 'pca.pkl')
