@@ -14,6 +14,7 @@ from sentence_transformers import SentenceTransformer
 import gc
 import logging
 
+# Download stopwords
 nltk.download('stopwords')
 stop_words = set(stopwords.words('english'))
 
@@ -78,7 +79,6 @@ def train_model(reviews, labels):
     # Free memory
     gc.collect()
 
-# Prediction function
 # Updated Prediction function
 def predict_review(review):
     # Preprocess the review
@@ -109,8 +109,7 @@ def predict_review(review):
     # Return the prediction and confidence
     return prediction, confidence
 
-
-# Evaluation function
+# Evaluation function with better confusion matrix logging
 def evaluate_model(reviews, labels):
     logging.basicConfig(level=logging.INFO)
     logging.info("Starting evaluation...")
@@ -145,7 +144,11 @@ def evaluate_model(reviews, labels):
     logging.info(f'Precision: {precision:.4f}')
     logging.info(f'Recall: {recall:.4f}')
     logging.info(f'F1 Score: {f1:.4f}')
-    logging.info(f'Confusion Matrix:\n{conf_matrix}')
+    
+    # Log confusion matrix row by row
+    logging.info('Confusion Matrix:')
+    for row in conf_matrix:
+        logging.info(f'{row}')
     
     return accuracy, precision, recall, f1, conf_matrix
 
