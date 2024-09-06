@@ -3,15 +3,21 @@ from fake_review_detector import predict_review, update_model  # Import predicti
 import os
 import nltk
 
-# Download required NLTK resources with error handling
+# Ensure only necessary NLTK resources are downloaded
 try:
     nltk.data.find('tokenizers/punkt')
 except LookupError:
     nltk.download('punkt')
 
-nltk.download('stopwords')
-nltk.download('wordnet')
-nltk.download('punkt_tab')
+try:
+    nltk.data.find('corpora/stopwords')
+except LookupError:
+    nltk.download('stopwords')
+
+try:
+    nltk.data.find('corpora/wordnet')
+except LookupError:
+    nltk.download('wordnet')
 
 app = Flask(__name__)
 
@@ -19,23 +25,19 @@ app = Flask(__name__)
 FEEDBACK_FILE_PATH = 'feedback.txt'
 REVIEWS_FILE_PATH = 'reviews.txt'
 
-
 def store_feedback(feedback):
     """Store feedback in a file."""
     with open(FEEDBACK_FILE_PATH, 'a') as f:
         f.write(f"{feedback}\n")
-
 
 def store_review(review, review_type):
     """Store review contributions in a file."""
     with open(REVIEWS_FILE_PATH, 'a') as f:
         f.write(f"Review: {review}, Type: {review_type}\n")
 
-
 @app.route('/')
 def home():
     return render_template('index.html')
-
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -48,7 +50,7 @@ def predict():
         return render_template('index.html', error="Please provide a review.")
 
     try:
-        # Call the prediction function
+        # Call the prediction function from fake_review_detector
         result, confidence = predict_review(review, product_type)
 
         # Render template with prediction results
@@ -57,7 +59,6 @@ def predict():
     except Exception as e:
         # Handle any errors that occur during prediction
         return render_template('index.html', error=f"An error occurred during prediction: {str(e)}")
-
 
 @app.route('/submit_feedback', methods=['POST'])
 def submit_feedback():
@@ -70,7 +71,6 @@ def submit_feedback():
         print("No feedback provided.")
 
     return redirect(url_for('home'))
-
 
 @app.route('/submit_review', methods=['POST'])
 def submit_review():
@@ -97,9 +97,8 @@ def submit_review():
         # Handle any errors that occur during model update
         return render_template('index.html', error=f"An error occurred while updating the model: {str(e)}")
 
-
 if __name__ == '__main__':
-    # Ensure the files exist or create them
+    # Ensure the feedback and reviews files exist or create them
     if not os.path.exists(FEEDBACK_FILE_PATH):
         open(FEEDBACK_FILE_PATH, 'w').close()
     if not os.path.exists(REVIEWS_FILE_PATH):
