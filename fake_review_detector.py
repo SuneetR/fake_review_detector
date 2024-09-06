@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split, StratifiedKFold
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics import f1_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 from sklearn.ensemble import StackingClassifier
 from sklearn.linear_model import LogisticRegression
 from xgboost import XGBClassifier
@@ -88,3 +88,39 @@ def update_model(review, label):
     # Preprocess and append to the training dataset (or implement online learning)
     # This part requires a mechanism to retrain the model incrementally
     pass
+
+# Evaluation function
+def evaluate_model(X_test, y_test):
+    load_models()
+    
+    # Predict on test set
+    y_pred = stacking_model.predict(X_test)
+    y_proba = stacking_model.predict_proba(X_test)
+    
+    # Calculate metrics
+    accuracy = accuracy_score(y_test, y_pred)
+    precision = precision_score(y_test, y_pred)
+    recall = recall_score(y_test, y_pred)
+    f1 = f1_score(y_test, y_pred)
+    conf_matrix = confusion_matrix(y_test, y_pred)
+    
+    # Print metrics
+    print(f'Accuracy: {accuracy:.4f}')
+    print(f'Precision: {precision:.4f}')
+    print(f'Recall: {recall:.4f}')
+    print(f'F1 Score: {f1:.4f}')
+    print(f'Confusion Matrix:\n{conf_matrix}')
+
+    return accuracy, precision, recall, f1, conf_matrix
+
+# Example usage
+if __name__ == "__main__":
+    # Assuming you have your test data loaded as X_test and y_test
+    # X_test = ... (Feature matrix for test data)
+    # y_test = ... (True labels for test data)
+    # evaluate_model(X_test, y_test)
+    
+    # Example for prediction
+    review = "This product is amazing and I loved it!"
+    prediction, confidence = predict_review(review)
+    print(f'Prediction: {prediction}, Confidence: {confidence:.4f}')
