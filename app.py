@@ -54,7 +54,7 @@ data_augmented['cleaned_review'] = data_augmented['cleaned_review'].apply(lambda
 data_augmented = pd.concat([data, data_augmented], ignore_index=True)
 
 # Preprocessing function
-    def preprocess_text(text):
+def preprocess_text(text):
     # Tokenize text
     tokens = word_tokenize(text.lower())
     # Remove punctuation and stopwords
