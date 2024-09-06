@@ -14,14 +14,11 @@ from nltk.tokenize import word_tokenize
 from sentence_transformers import SentenceTransformer
 import joblib
 
-# Download required NLTK resources with error handling
-try:
-    nltk.data.find('tokenizers/punkt')
-except LookupError:
-    nltk.download('punkt')
-
+# Download required NLTK resources
 nltk.download('stopwords')
+nltk.download('punkt')  # Only download 'punkt', since this is all you need for tokenization
 
+# Load stopwords from NLTK
 stop_words = set(stopwords.words('english'))
 
 # Load the dataset
@@ -30,8 +27,8 @@ data['label'] = data['label'].map({'fake': 0, 'genuine': 1})  # Adjust according
 
 # Preprocessing function
 def preprocess_text(text):
-    tokens = word_tokenize(text.lower())
-    cleaned_tokens = [word for word in tokens if word not in stop_words and word not in string.punctuation]
+    tokens = word_tokenize(text.lower())  # Tokenize the text
+    cleaned_tokens = [word for word in tokens if word not in stop_words and word not in string.punctuation]  # Remove stopwords and punctuation
     return ' '.join(cleaned_tokens)
 
 # Apply preprocessing
