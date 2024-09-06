@@ -1,13 +1,12 @@
 import nltk
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import train_test_split, StratifiedKFold
+from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 from sklearn.ensemble import StackingClassifier
 from sklearn.linear_model import LogisticRegression
 from xgboost import XGBClassifier
-from scipy.sparse import hstack, csr_matrix
 from sklearn.decomposition import PCA
 import string
 from nltk.corpus import stopwords
@@ -17,6 +16,10 @@ import logging
 
 nltk.download('stopwords')
 stop_words = set(stopwords.words('english'))
+
+# Load the CSV file containing reviews
+def load_reviews(file_path):
+    return pd.read_csv(file_path)
 
 # Tokenizer
 def basic_tokenize(text):
@@ -41,7 +44,7 @@ def get_sbert_embeddings(text_data, batch_size=32):
         embeddings.append(batch_embeddings)
     return np.vstack(embeddings)
 
-# Directly instantiate models instead of loading .pkl files
+# Model setup (No pre-trained models needed)
 tfidf_vectorizer = TfidfVectorizer(max_features=5000)
 pca = PCA(n_components=100)
 stacking_model = StackingClassifier(
@@ -52,8 +55,31 @@ stacking_model = StackingClassifier(
     final_estimator=LogisticRegression()
 )
 
+# Model training function
+def train_model(reviews, labels):
+    # Preprocess reviews
+    cleaned_reviews = reviews.apply(preprocess_text)
+    
+    # Generate Sentence-BERT embeddings
+    sbert_embeddings = get_sbert_embeddings(cleaned_reviews)
+    
+    # Generate TF-IDF features
+    tfidf_features = tfidf_vectorizer.fit_transform(cleaned_reviews)
+    
+    # Reduce dimensionality of embeddings using PCA
+    sbert_embeddings_pca = pca.fit_transform(sbert_embeddings)
+    
+    # Combine features
+    combined_features = np.hstack((tfidf_features.toarray(), sbert_embeddings_pca))
+    
+    # Train stacking classifier
+    stacking_model.fit(combined_features, labels)
+
+    # Free memory
+    gc.collect()
+
 # Prediction function
-def predict_review(review, product_type=None):
+def predict_review(review):
     # Preprocess review
     cleaned_review = preprocess_text(review)
     
@@ -62,41 +88,43 @@ def predict_review(review, product_type=None):
     tfidf_features = tfidf_vectorizer.transform([cleaned_review])
     
     # Combine features
-    review_length = len(cleaned_review.split())
-    word_diversity = len(set(cleaned_review.split())) / len(cleaned_review.split()) if len(cleaned_review.split()) > 0 else 0
-    meta_features = csr_matrix([[review_length, word_diversity]], dtype=np.float16)
-    
-    combined_features = hstack([csr_matrix(tfidf_features), csr_matrix(sbert_embedding, dtype=np.float16), meta_features], format='csr')
+    combined_features = np.hstack((tfidf_features.toarray(), sbert_embedding))
     
     # Make predictions
     prediction = stacking_model.predict(combined_features)[0]
     confidence = max(stacking_model.predict_proba(combined_features)[0])
-    
-    # Free memory
-    gc.collect()
 
     return prediction, confidence
 
-# Model update function
-def update_model(review, label):
-    # This part requires a mechanism to retrain the model incrementally
-    pass
-
 # Evaluation function
-def evaluate_model(X_test, y_test):
+def evaluate_model(reviews, labels):
     logging.basicConfig(level=logging.INFO)
     logging.info("Starting evaluation...")
     
+    # Preprocess reviews
+    cleaned_reviews = reviews.apply(preprocess_text)
+    
+    # Generate Sentence-BERT embeddings
+    sbert_embeddings = get_sbert_embeddings(cleaned_reviews)
+    
+    # Generate TF-IDF features
+    tfidf_features = tfidf_vectorizer.transform(cleaned_reviews)
+    
+    # Reduce dimensionality of embeddings using PCA
+    sbert_embeddings_pca = pca.transform(sbert_embeddings)
+    
+    # Combine features
+    combined_features = np.hstack((tfidf_features.toarray(), sbert_embeddings_pca))
+    
     # Predict on test set
-    y_pred = stacking_model.predict(X_test)
-    y_proba = stacking_model.predict_proba(X_test)
+    y_pred = stacking_model.predict(combined_features)
     
     # Calculate metrics
-    accuracy = accuracy_score(y_test, y_pred)
-    precision = precision_score(y_test, y_pred)
-    recall = recall_score(y_test, y_pred)
-    f1 = f1_score(y_test, y_pred)
-    conf_matrix = confusion_matrix(y_test, y_pred)
+    accuracy = accuracy_score(labels, y_pred)
+    precision = precision_score(labels, y_pred)
+    recall = recall_score(labels, y_pred)
+    f1 = f1_score(labels, y_pred)
+    conf_matrix = confusion_matrix(labels, y_pred)
     
     # Log metrics
     logging.info(f'Accuracy: {accuracy:.4f}')
@@ -107,10 +135,20 @@ def evaluate_model(X_test, y_test):
     
     return accuracy, precision, recall, f1, conf_matrix
 
-# Example usage
+# Example usage (integrated pipeline)
 if __name__ == "__main__":
-    # Assuming you have your test data loaded as X_test and y_test
-    # X_test = ... (Feature matrix for test data)
-    # y_test = ... (True labels for test data)
-    # evaluate_model(X_test, y_test)
-    pass
+    # Load reviews and labels from CSV
+    df = load_reviews('reviews.csv')
+    
+    # Assuming the CSV has two columns: 'review' and 'label' (0 or 1 for fake/real)
+    reviews = df['review']
+    labels = df['label']
+    
+    # Split the data for training and testing
+    X_train, X_test, y_train, y_test = train_test_split(reviews, labels, test_size=0.2, random_state=42)
+    
+    # Train the model
+    train_model(X_train, y_train)
+    
+    # Evaluate the model
+    evaluate_model(X_test, y_test)
