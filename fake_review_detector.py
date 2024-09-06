@@ -1,122 +1,140 @@
-import string
-import pandas as pd
-import numpy as np
-import xgboost as xgb
-from sklearn.model_selection import train_test_split, GridSearchCV
-from sklearn.metrics import classification_report, accuracy_score, f1_score, roc_auc_score, precision_recall_curve
-from sklearn.pipeline import Pipeline
-from sklearn.decomposition import PCA
-from sklearn.feature_extraction.text import TfidfVectorizer
-from imblearn.over_sampling import SMOTE
-from imblearn.pipeline import Pipeline as ImbPipeline
-import torch
-from transformers import DistilBertTokenizer, DistilBertModel
-from sklearn.base import BaseEstimator, TransformerMixin
-import gc
-
-# Alternative stop words list
-stop_words = set([
-    'i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', 'your', 'yours', 'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she', 'her', 'hers', 'herself', 'it', 'its', 'itself', 'they', 'them', 'their', 'theirs', 'themselves', 'what', 'which', 'who', 'whom', 'this', 'that', 'these', 'those', 'am', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'having', 'do', 'does', 'did', 'doing', 'a', 'an', 'the', 'and', 'but', 'if', 'or', 'because', 'as', 'until', 'while', 'of', 'at', 'by', 'for', 'with', 'about', 'against', 'between', 'into', 'through', 'during', 'before', 'after', 'above', 'below', 'to', 'from', 'up', 'down', 'in', 'out', 'on', 'off', 'over', 'under', 'again', 'further', 'then', 'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all', 'any', 'both', 'each', 'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 's', 't', 'can', 'will', 'just', 'don', 'should', 'now'
-])
 import nltk
-from nltk.stem import WordNetLemmatizer
-import transformers
+import numpy as np
+import pandas as pd
+from sklearn.model_selection import train_test_split, GridSearchCV, StratifiedKFold
+from sklearn.ensemble import VotingClassifier
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.svm import SVC
+from sklearn.metrics import f1_score, make_scorer
+from transformers import DistilBertTokenizer, DistilBertModel
+import torch
+from torch.nn.functional import softmax
+from scipy.sparse import hstack, csr_matrix
+import string
+import random
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+import joblib
 
-# Initialize NLTK components
-lemmatizer = WordNetLemmatizer()
+# Download required NLTK resources
+nltk.download('stopwords')
+nltk.download('punkt')
+nltk.download('wordnet')
 
-# Load pre-trained BERT model and tokenizer
-tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased')
-bert_model = DistilBertModel.from_pretrained('distilbert-base-uncased')
+stop_words = set(stopwords.words('english'))
 
-# Preprocess text function
+# Load the dataset
+data = pd.read_csv('reviews.csv')  # Replace with your dataset path
+data['label'] = data['label'].map({'fake': 0, 'genuine': 1})  # Adjust according to your dataset
+
+# Preprocessing function
 def preprocess_text(text):
-    text = text.lower()
-    text = ''.join([char for char in text if char not in string.punctuation])
-    text = ' '.join([lemmatizer.lemmatize(word) for word in text.split() if word not in stop_words])
-    return text
+    # Tokenize text
+    tokens = word_tokenize(text.lower())
+    # Remove punctuation and stopwords
+    stop_words = set(stopwords.words('english'))
+    cleaned_tokens = [word for word in tokens if word not in stop_words and word not in string.punctuation]
+    return ' '.join(cleaned_tokens)
 
-# Convert text to BERT embeddings
-def text_to_bert(text):
-    tokens = tokenizer(text, return_tensors='pt', padding=True, truncation=True, max_length=128)
-    with torch.no_grad():
-        outputs = bert_model(**tokens)
-    return outputs.last_hidden_state.mean(dim=1).squeeze().numpy()
+# Data Augmentation: Synonym Replacement
+def synonym_replacement(text):
+    words = nltk.word_tokenize(text)
+    new_text = []
+    for word in words:
+        synonyms = nltk.corpus.wordnet.synsets(word)
+        if synonyms:
+            synonym = random.choice(synonyms).lemmas()[0].name()
+            new_text.append(synonym if synonym != word else word)
+        else:
+            new_text.append(word)
+    return ' '.join(new_text)
 
-# Custom transformer for BERT embeddings
-class BERTVectorizer(BaseEstimator, TransformerMixin):
-    def fit(self, X, y=None):
-        return self
-    
-    def transform(self, X):
-        return np.array([text_to_bert(text) for text in X])
+# Data Augmentation: Random Deletion
+def random_deletion(text, p=0.1):
+    words = nltk.word_tokenize(text)
+    if len(words) == 1: 
+        return text
+    new_text = [word for word in words if random.random() > p]
+    return ' '.join(new_text)
 
-# Load data from CSV file
-try:
-    df = pd.read_csv('reviews.csv')
-except FileNotFoundError:
-    raise Exception("The file 'reviews.csv' was not found. Please make sure it's in the correct directory.")
+# Apply data augmentations
+data_augmented = data.copy()
+data_augmented['cleaned_review'] = data['review'].apply(lambda x: synonym_replacement(preprocess_text(x)))
+data_augmented = pd.concat([data, data_augmented], ignore_index=True)
 
-# Apply preprocessing to the dataset
-df['review'] = df['review'].apply(preprocess_text)
+# Apply preprocessing
+data['cleaned_review'] = data['review'].apply(preprocess_text)
 
-# Ensure 'label' column is numeric (1 for genuine, 0 for fake)
-if not pd.api.types.is_numeric_dtype(df['label']):
-    df['label'] = df['label'].astype(int)
+# Combine original and augmented data
+data = pd.concat([data, data_augmented], ignore_index=True)
 
-# Split the dataset into features and target
-X = df['review']
-y = df['label']
-
-# Split the dataset into training and test sets
+# Split the dataset
+X = data['cleaned_review']
+y = data['label']
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Advanced feature engineering pipeline
-feature_pipeline = Pipeline([
-    ('tfidf', TfidfVectorizer(max_features=5000, ngram_range=(1, 2))),  # Reduced features and n-grams
-    ('pca', PCA(n_components=100))  # Reduced components
-])
+# TF-IDF Vectorization
+tfidf_vectorizer = TfidfVectorizer(max_features=3000, ngram_range=(1, 2))
+X_train_tfidf = tfidf_vectorizer.fit_transform(X_train)
+X_test_tfidf = tfidf_vectorizer.transform(X_test)
 
-# Combine feature extraction with SMOTE and XGBoost in an imbalanced pipeline
-pipeline = ImbPipeline([
-    ('features', feature_pipeline),
-    ('smote', SMOTE(random_state=42)),
-    ('xgb', xgb.XGBClassifier(objective='binary:logistic', random_state=42))
-])
+# Transformer embeddings using DistilBERT
+tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased')
+model = DistilBertModel.from_pretrained('distilbert-base-uncased')
 
-# Hyperparameter tuning using GridSearchCV
+def get_transformer_embeddings(text_data):
+    inputs = tokenizer(text_data.tolist(), padding=True, truncation=True, return_tensors="pt", max_length=128)
+    with torch.no_grad():
+        outputs = model(**inputs)
+    return outputs.last_hidden_state.mean(dim=1).numpy()
+
+# Generate embeddings
+X_train_bert = get_transformer_embeddings(X_train)
+X_test_bert = get_transformer_embeddings(X_test)
+
+# Convert BERT embeddings to sparse format
+X_train_bert_sparse = csr_matrix(X_train_bert)
+X_test_bert_sparse = csr_matrix(X_test_bert)
+
+# Combine TF-IDF and BERT embeddings
+X_train_combined = hstack([X_train_tfidf, X_train_bert_sparse])
+X_test_combined = hstack([X_test_tfidf, X_test_bert_sparse])
+
+# Define base models
+lr = LogisticRegression(max_iter=2000, class_weight='balanced', C=0.1)
+nb = MultinomialNB(alpha=0.5)
+svc = SVC(kernel='linear', probability=True, class_weight='balanced', C=1)
+
+# Ensemble model with voting
+ensemble_model = VotingClassifier(estimators=[
+    ('lr', lr),
+    ('nb', nb),
+    ('svc', svc)
+], voting='soft')
+
+# Cross-validation setup
+cv = StratifiedKFold(n_splits=5)
+
+# Hyperparameter tuning
 param_grid = {
-    'xgb__learning_rate': [0.01, 0.05],
-    'xgb__max_depth': [6, 10],
-    'xgb__subsample': [0.7, 0.8],
-    'xgb__colsample_bytree': [0.7, 0.8],
-    'xgb__n_estimators': [100, 200]
+    'lr__C': [0.01, 0.1, 1, 10],
+    'svc__C': [0.01, 0.1, 1, 10],
+    'nb__alpha': [0.1, 0.5, 1]
 }
 
-grid_search = GridSearchCV(pipeline, param_grid, cv=3, n_jobs=-1, scoring='f1')
-grid_search.fit(X_train, y_train)
+grid_search = GridSearchCV(ensemble_model, param_grid, cv=cv, scoring=make_scorer(f1_score, average='weighted'))
+grid_search.fit(X_train_combined, y_train)
 
-# Best model from GridSearch
+# Fit the model on the best parameters
 best_model = grid_search.best_estimator_
+best_model.fit(X_train_combined, y_train)
 
-# Evaluate the model on the test set
-y_pred = best_model.predict(X_test)
-y_proba = best_model.predict_proba(X_test)
+# Predict and evaluate
+y_pred = best_model.predict(X_test_combined)
+f1 = f1_score(y_test, y_pred, average='weighted')
+print(f"Optimized F1 score: {f1:.4f}")
 
-print("Classification Report:\n", classification_report(y_test, y_pred))
-print("Accuracy:", accuracy_score(y_test, y_pred))
-print("F1 Score:", f1_score(y_test, y_pred))
-print("ROC AUC Score:", roc_auc_score(y_test, y_proba[:, 1]))
-
-# Precision-Recall curve
-precision, recall, thresholds = precision_recall_curve(y_test, y_proba[:, 1])
-print(f'Precision: {precision}\nRecall: {recall}')
-
-# Save the best model and vectorizer if needed
-import joblib
-joblib.dump(best_model, 'best_model.pkl')
-joblib.dump(feature_pipeline, 'feature_pipeline.pkl')
-
-# Release memory
-del df, X, y, X_train, X_test, y_train, y_test
-gc.collect()
+# Save the trained model
+joblib.dump(best_model, 'optimized_fake_review_detector_model.pkl')
