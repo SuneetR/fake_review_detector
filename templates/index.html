@@ -320,6 +320,30 @@
             margin-bottom: 15px;
             transition: transform 0.3s;
         }
+        /* Display Prediction and Confidence */
+.result-container {
+    flex: 1;
+    text-align: center;
+    background: #ffffff1a;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.pie-chart {
+    width: 200px;
+    height: 200px;
+    background-image: conic-gradient(#4CAF50 0% 0%, #f44336 0% 100%);
+    border-radius: 50%;
+    margin: 30px auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: #fff;
+    font-weight: bold;
+}
+
 
         .team-member:hover img {
             transform: scale(1.05);
@@ -600,6 +624,34 @@
             toggleButton.classList.toggle('active');
             codeSnippet.style.display = codeSnippet.style.display === 'block' ? 'none' : 'block';
         }
+        // Handle form submission with AJAX
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('#fake-review-form form');
+    const resultContainer = document.querySelector('.result-container');
+    const pieChart = document.querySelector('.pie-chart');
+    
+    form.addEventListener('submit', function(event) {
+        event.preventDefault();
+        const review = form.querySelector('textarea').value;
+        
+        // Simulate an AJAX request
+        setTimeout(() => {
+            // Replace with actual prediction and confidence data
+            const prediction = 'Fake'; // or 'Real'
+            const confidence = Math.random() * 100;
+
+            // Update result container
+            resultContainer.innerHTML = `
+                <h2>Prediction: ${prediction}</h2>
+                <h3>Confidence: ${confidence.toFixed(2)}%</h3>
+                <div class="pie-chart" style="background-image: conic-gradient(#4CAF50 0% ${confidence.toFixed(2)}%, #f44336 ${confidence.toFixed(2)}% 100%);">
+                    ${confidence.toFixed(2)}%
+                </div>
+            `;
+        }, 1000); // Simulate network delay
+    });
+});
+
 
         // Back to Top Button Functionality
         window.onscroll = function() {
@@ -645,21 +697,19 @@
     </section>
 
     <!-- Fake Review Detector Section -->
-    <div id="fake-review-form" class="fake-review-form">
-        <div class="form-container">
-            <h2>Fake Review Detector</h2>
-            <form action="/predict" method="post">
-                <textarea name="review" rows="5" cols="40" placeholder="Enter a review..."></textarea><br>
-                <input type="submit" value="Analyze Review">
-            </form>
-            {% if prediction %}
-            <div class="result-container">
-                <h2>Prediction: {{ prediction }}</h2>
-                <h3>Confidence: {{ confidence }}</h3>
-            </div>
-            {% endif %}
+   <div id="fake-review-form" class="fake-review-form">
+    <div class="form-container">
+        <h2>Fake Review Detector</h2>
+        <form action="/predict" method="post">
+            <textarea name="review" rows="5" cols="40" placeholder="Enter a review..."></textarea><br>
+            <input type="submit" value="Analyze Review">
+        </form>
+        <div class="result-container">
+            <!-- Prediction and confidence will be dynamically updated here -->
         </div>
     </div>
+</div>
+
 
 
     <!-- Collapsible Code Snippet Section -->
