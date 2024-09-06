@@ -54,10 +54,16 @@ data_augmented['cleaned_review'] = data_augmented['cleaned_review'].apply(lambda
 data_augmented = pd.concat([data, data_augmented], ignore_index=True)
 
 # Preprocessing function
-def preprocess_text(text):
-    tokens = nltk.word_tokenize(text.lower())
-    tokens = [word for word in tokens if word.isalpha() and word not in stop_words]
-    return ' '.join(tokens)
+    def preprocess_text(text):
+    # Tokenize text
+    tokens = word_tokenize(text.lower())
+    # Remove punctuation and stopwords
+    stop_words = set(stopwords.words('english'))
+    cleaned_tokens = [word for word in tokens if word not in stop_words and word not in string.punctuation]
+    return ' '.join(cleaned_tokens)
+
+# Load data
+data = pd.read_csv('reviews.csv')
 
 # Apply preprocessing
 data['cleaned_review'] = data['review'].apply(preprocess_text)
