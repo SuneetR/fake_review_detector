@@ -1,5 +1,5 @@
 from flask import Flask, request, render_template, redirect, url_for
-from fake_review_detector import predict_review, update_model
+from fake_review_detector import predict_review  # Removed update_model
 import os
 import nltk
 import logging
@@ -93,17 +93,16 @@ def submit_review():
 
     try:
         store_review(review, review_type)
-        new_label = 1 if review_type.lower() == 'fake' else 0
-        update_model(review, new_label)
-        logger.info(f"Received review: {review}, Type: {review_type}, Model Updated")
+        # Removed model update code since update_model is not used
+        logger.info(f"Received review: {review}, Type: {review_type}")
         del review, review_type
         gc.collect()
         return redirect(url_for('home'))
 
     except Exception as e:
-        logger.error(f"Error while updating the model: {e}")
+        logger.error(f"Error while storing the review: {e}")
         gc.collect()
-        return render_template('index.html', error=f"An error occurred while updating the model: {str(e)}")
+        return render_template('index.html', error=f"An error occurred while storing the review: {str(e)}")
 
 if __name__ == '__main__':
     if not os.path.exists(FEEDBACK_FILE_PATH):
