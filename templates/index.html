@@ -1,811 +1,722 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fake Review Detector</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
-
-        body {
-            font-family: 'Inter', sans-serif;
-            margin: 0;
-            padding: 0;
-            overflow-x: hidden;
-            transition: background-color 0.5s, color 0.5s;
-        }
-
-        /* Light Mode Background */
-        body.light-mode {
-            background: linear-gradient(135deg, #e0f7fa, #ffffff);
-            color: #333;
-        }
-
-        /* Dark Mode Background */
-        body.dark-mode {
-            background: linear-gradient(to bottom, #0f2027, #203a43, #2c5364);
-            color: #ddd;
-        }
-
-        header {
-            background: rgba(0, 0, 0, 0.8);
-            padding: 20px;
-            text-align: center;
-            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.3);
-            margin-bottom: 20px;
-        }
-
-        header h1 {
-            font-size: 48px;
-            margin: 0;
-            letter-spacing: 2px;
-            background: linear-gradient(90deg, #ff8c00, #ffd700);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-        }
-
-        /* Navbar for Dark Mode */
-        .nav {
-            display: flex;
-            justify-content: center;
-            padding: 10px 0;
-            background-color: rgba(0, 0, 0, 0.8);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-        }
-
-        .nav a {
-            color: white;
-            text-decoration: none;
-            padding: 15px 20px;
-            margin: 0 10px;
-            font-size: 18px;
-            text-transform: uppercase;
-            transition: color 0.3s;
-        }
-
-        .nav a:hover {
-            color: #ffd700;
-        }
-
-        .dark-mode .nav {
-            background-color: rgba(0, 0, 0, 0.9);
-        }
-
-        .dark-mode .nav a {
-            color: #ddd;
-        }
-
-        .dark-mode .nav a:hover {
-            color: #ff8c00;
-        }
-
-        /* Dark Mode Toggle Button */
-        .dark-mode-toggle {
-            position: absolute;
-            top: 15px;
-            right: 20px;
-            background: #ffd700;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        .dark-mode .dark-mode-toggle {
-            background: #ff8c00;
-            color: white;
-        }
-
-        /* Hero Section */
-        .hero {
-            position: relative;
-            height: 100vh;
-            background: linear-gradient(135deg, #141E30, #243B55);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            color: white;
-            overflow: hidden;
-        }
-
-        .hero .content {
-            z-index: 2;
-        }
-
-        .hero h1 {
-            font-size: 4em;
-            margin: 0;
-            opacity: 0;
-            animation: fadeIn 2s ease-in-out forwards;
-        }
-
-        .hero p {
-            font-size: 1.5em;
-            margin: 20px 0;
-            animation: typewriter 4s steps(40) 1s forwards;
-            border-right: 2px solid #fff;
-            white-space: nowrap;
-            overflow: hidden;
-            opacity: 0;
-        }
-
-        .hero .cta {
-            background: #ff8c00;
-            padding: 15px 30px;
-            font-size: 1.2em;
-            color: white;
-            text-decoration: none;
-            border-radius: 30px;
-            transition: background-color 0.3s;
-            margin-top: 20px;
-        }
-
-        .hero .cta:hover {
-            background: #ffd700;
-        }
-
-        /* Animations */
-        @keyframes fadeIn {
-            to { opacity: 1; }
-        }
-
-        @keyframes typewriter {
-            0% { width: 0; opacity: 1; }
-            100% { width: 100%; opacity: 1; }
-        }
-
-        /* Fake Review Detector Section */
-        #fake-review-form {
-            background: linear-gradient(135deg, #8e44ad, #3498db);
-            color: white;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            padding: 50px;
-            margin: 40px auto;
-            width: 80%;
-            border-radius: 20px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-        }
-
-        #fake-review-form .form-container {
-            flex: 1;
-            padding: 20px;
-        }
-
-        #fake-review-form .form-container h2 {
-            font-size: 36px;
-            margin-bottom: 20px;
-        }
-
-        #fake-review-form .form-container textarea {
-            width: 100%;
-            padding: 20px;
-            font-size: 18px;
-            border-radius: 10px;
-            border: none;
-            margin-bottom: 20px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-        }
-
-        #fake-review-form .form-container input[type="submit"] {
-            background-color: #4CAF50;
-            color: white;
-            padding: 15px 30px;
-            font-size: 18px;
-            border-radius: 10px;
-            border: none;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        #fake-review-form .form-container input[type="submit"]:hover {
-            background-color: #45a049;
-        }
-
-        /* Display Prediction and Confidence */
-        .result-container {
-            flex: 1;
-            text-align: center;
-            background: #ffffff1a;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-        }
-
-        .pie-chart {
-            width: 200px;
-            height: 200px;
-            background-image: conic-gradient(#4CAF50 0% {{confidence}}%, #f44336 {{confidence}}% 100%);
-            border-radius: 50%;
-            margin: 30px auto;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            color: #fff;
-            font-weight: bold;
-        }
-        
-        /* Chart Section */
-.chart-container {
-    width: 80%;
-    margin: 40px auto;
-    padding: 40px;
-    background: linear-gradient(135deg, #3498db, #8e44ad);
-    border-radius: 20px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-    color: white;
-}
-
-.chart-container canvas {
-    width: 100%;
-    height: 400px;
-}
-
-
-
-
-        .result-container h2 {
-            font-size: 36px;
-            margin-bottom: 10px;
-        }
-
-        .result-container h3 {
-            font-size: 28px;
-            margin-top: 0;
-        }
-
-        /* Introduction Video Section */
-        .intro-video-container {
-            background: linear-gradient(135deg, #27ae60, #2ecc71);
-            color: white;
-            padding: 60px;
-            margin: 40px auto;
-            text-align: center;
-            width: 80%;
-            border-radius: 20px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-        }
-
-        .intro-video-container h3 {
-            font-size: 30px;
-            margin-bottom: 20px;
-        }
-
-        .intro-video-container iframe {
-            width: 80%;
-            height: 400px;
-            border-radius: 20px;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
-        }
-
-        /* Team Section */
-        .team {
-            background: linear-gradient(135deg, #16a085, #1abc9c);
-            padding: 60px;
-            margin: 40px auto;
-            width: 80%;
-            border-radius: 20px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-            color: white;
-            display: flex;
-            justify-content: space-around;
-        }
-
-        .team-member {
-            background-color: rgba(255, 255, 255, 0.1);
-            padding: 20px;
-            margin: 20px;
-            border-radius: 10px;
-            width: 30%;
-            box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.3);
-            transition: box-shadow 0.3s;
-            cursor: pointer;
-            overflow: hidden;
-            position: relative;
-            text-align: center;
-        }
-
-        .team-member:hover {
-            box-shadow: 0px 0px 30px rgba(255, 255, 255, 0.5);
-        }
-
-        .team-member img {
-            width: 100%;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            transition: transform 0.3s;
-        }
-        /* Display Prediction and Confidence */
-.result-container {
-    flex: 1;
-    text-align: center;
-    background: #ffffff1a;
-    border-radius: 10px;
-    padding: 20px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-}
-
-.pie-chart {
-    width: 200px;
-    height: 200px;
-    background-image: conic-gradient(#4CAF50 0% 0%, #f44336 0% 100%);
-    border-radius: 50%;
-    margin: 30px auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-    color: #fff;
-    font-weight: bold;
-}
-
-
-        .team-member:hover img {
-            transform: scale(1.05);
-        }
-
-        .team-member h3 {
-            margin: 0;
-            font-size: 24px;
-        }
-
-        /* Suggestions Section */
-        .suggestions {
-            background: linear-gradient(135deg, #f39c12, #f1c40f);
-            width: 60%;
-            padding: 40px;
-            margin: 40px auto;
-            border-radius: 15px;
-            box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.3);
-            text-align: center;
-        }
-
-        .suggestions h2 {
-            font-size: 28px;
-            margin-bottom: 20px;
-        }
-
-        .suggestions textarea {
-            width: 80%;
-            padding: 20px;
-            font-size: 16px;
-            margin-bottom: 20px;
-            border-radius: 10px;
-            border: 1px solid #ccc;
-            resize: none;
-            text-align: center;
-        }
-
-        .suggestions input[type="submit"] {
-            background-color: #4CAF50;
-            color: white;
-            padding: 12px 30px;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s;
-        }
-
-        .suggestions input[type="submit"]:hover {
-            background-color: #45a049;
-        }
-
-        .response-message {
-            display: none;
-            color: green;
-            margin-top: 20px;
-        }
-
-        /* Contribution Section */
-        .contribute {
-            background: linear-gradient(135deg, #2980b9, #3498db);
-            color: white;
-            width: 60%;
-            padding: 40px;
-            margin: 40px auto;
-            border-radius: 15px;
-            box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.3);
-        }
-
-        .contribute h2 {
-            font-size: 28px;
-            margin-bottom: 20px;
-        }
-
-        .contribute form {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .contribute label {
-            margin: 10px 0;
-            font-size: 18px;
-        }
-
-        .contribute textarea {
-            width: 100%;
-            padding: 15px;
-            font-size: 16px;
-            margin-bottom: 20px;
-            border-radius: 10px;
-            border: 1px solid #ccc;
-            resize: none;
-        }
-
-        .contribute input[type="file"] {
-            margin: 20px 0;
-            font-size: 16px;
-        }
-
-        .contribute input[type="submit"] {
-            background-color: #4CAF50;
-            color: white;
-            padding: 12px 30px;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s;
-        }
-
-        .contribute input[type="submit"]:hover {
-            background-color: #45a049;
-        }
-
-        .radio-container {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin: 20px 0;
-        }
-
-        .response-message {
-            display: none;
-            color: green;
-            margin-top: 20px;
-        }
-
-        /* Footer */
-        footer {
-            background-color: #333;
-            color: white;
-            padding: 20px 0;
-            text-align: center;
-            margin-top: 40px;
-        }
-
-        footer a {
-            color: #ffd700;
-            text-decoration: none;
-            margin: 0 10px;
-            font-size: 14px;
-        }
-
-        footer a:hover {
-            color: #ff8c00;
-        }
-
-        /* Back to Top Button */
-        .back-to-top {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            background: #ff8c00;
-            color: white;
-            padding: 10px 15px;
-            border-radius: 50%;
-            cursor: pointer;
-            display: none;
-            z-index: 1000;
-            transition: background-color 0.3s;
-        }
-
-        .back-to-top:hover {
-            background: #ffd700;
-        }
-
-        /* Collapsible Code Snippet Section */
-        .code-snippet-container {
-            background: linear-gradient(135deg, #2c3e50, #4ca1af);
-            color: white;
-            padding: 40px;
-            margin: 40px auto;
-            text-align: left;
-            width: 80%;
-            border-radius: 20px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-        }
-
-        .code-snippet-container h3 {
-            font-size: 30px;
-            margin-bottom: 20px;
-        }
-
-        .code-snippet {
-            background-color: #1e272e;
-            border-radius: 10px;
-            padding: 20px;
-            overflow-x: auto;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 14px;
-            line-height: 1.5;
-            display: none;
-        }
-
-        .code-snippet-toggle {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-            margin-bottom: 20px;
-        }
-
-        .code-snippet-toggle:hover {
-            background-color: #45a049;
-        }
-
-        .code-snippet-toggle.active + .code-snippet {
-            display: block;
-        }
-
-        /* Chart Section */
-        .chart-container {
-            width: 80%;
-            margin: 40px auto;
-            padding: 40px;
-            background: linear-gradient(135deg, #3498db, #8e44ad);
-            border-radius: 20px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-            color: white;
-        }
-
-        .chart-container canvas {
-            width: 100%;
-            height: 400px;
-        }
-    </style>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        // Dark Mode Toggle Functionality
-        function toggleDarkMode() {
-            document.body.classList.toggle('dark-mode');
-            document.body.classList.toggle('light-mode');
-        }
-
-        // Automatically Set Dark Mode Based on Time of Day
-        function setDarkModeBasedOnTime() {
-            const hour = new Date().getHours();
-            if (hour >= 18 || hour < 6) {
-                document.body.classList.add('dark-mode');
-            } else {
-                document.body.classList.add('light-mode');
-            }
-        }
-
-        // Initialize Chart.js for Data Visualization
-        function initializeChart() {
-            const ctx = document.getElementById('reviewChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: ['January', 'February', 'March', 'April', 'May', 'June'],
-                    datasets: [{
-                        label: 'Fake Reviews Detected',
-                        data: [12, 19, 3, 5, 2, 3],
-                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-        }
-
-        // Toggle Code Snippet Visibility
-        function toggleCodeSnippet() {
-            const toggleButton = document.querySelector('.code-snippet-toggle');
-            const codeSnippet = document.querySelector('.code-snippet');
-            toggleButton.classList.toggle('active');
-            codeSnippet.style.display = codeSnippet.style.display === 'block' ? 'none' : 'block';
-        }
-        // Handle form submission with AJAX
-document.addEventListener('DOMContentLoaded', function() {
-    // Ensure only one form and result container are selected
-    const form = document.getElementById('fake-review-form');  // Changed to select the form with the correct ID
-    const resultContainer = document.getElementById('result-container'); // Correct ID for result container
-
-    // Handle form submission
-    form.addEventListener('submit', function(event) {
-        event.preventDefault();
-        
-        // Get the review text from the form
-        const review = form.querySelector('textarea').value;
-        
-        // Simulate an AJAX request (you should replace this with your actual API call)
-        setTimeout(() => {
-            // Replace with actual prediction and confidence data from your backend model
-            const prediction = Math.random() > 0.5 ? 'Genuine' : 'Fake'; // Simulate random prediction
-            const confidence = Math.random() * 100;
-
-            // Determine pie chart colors based on prediction
-            const mainColor = prediction === 'Genuine' ? '#4CAF50' : '#f44336'; // Green for Genuine, Red for Fake
-            const secondaryColor = prediction === 'Genuine' ? '#f44336' : '#4CAF50'; // Red for Fake, Green for Genuine
-
-            // Update result container with prediction and confidence
-            resultContainer.innerHTML = `
-                <h2>Prediction: ${prediction}</h2>
-                <h3>Confidence: ${confidence.toFixed(2)}%</h3>
-                <div class="pie-chart" style="background-image: conic-gradient(${mainColor} 0% ${confidence.toFixed(2)}%, ${secondaryColor} ${confidence.toFixed(2)}% 100%);">
-                    ${confidence.toFixed(2)}%
-                </div>
-            `;
-        }, 1000); // Simulate the delay for an AJAX call
-    });
-});
-
-
-        // Back to Top Button Functionality
-        window.onscroll = function() {
-            var topButton = document.getElementById('backToTop');
-            if (document.body.scrollTop > 100 || document.documentElement.scrollTop > 100) {
-                topButton.style.display = "block";
-            } else {
-                topButton.style.display = "none";
-            }
-        };
-
-        function scrollToTop() {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        // Remove hero section on clicking "Get Started"
-        function removeHeroSection() {
-            document.querySelector('.hero').style.display = 'none';
-            document.getElementById('fake-review-form').scrollIntoView({ behavior: 'smooth' });
-        }
-
-        // Initialize Everything After Page Load
-        window.onload = function() {
-            setDarkModeBasedOnTime();
-            initializeChart();
-        }
-
-    </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fake Review Detector</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  
+  <!-- Font Awesome for Icons -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+
+  <style>
+    /* General Styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    body {
+      background-color: #f4f4f4;
+      color: #333;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* Smooth Scrolling */
+    html {
+      scroll-behavior: smooth;
+    }
+
+    /* Navbar Styles */
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #000;
+      padding: 1rem 2rem;
+      color: #fff;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      transition: background-color 0.5s ease, transform 0.3s ease;
+    }
+
+    /* Navbar Sticky Effect on Scroll */
+    .navbar.active {
+      background-color: #222;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+      transition: background-color 0.5s ease, box-shadow 0.5s ease;
+    }
+
+    .navbar-brand {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #fff;
+      text-decoration: none;
+      transition: transform 0.3s ease;
+    }
+
+    .navbar-brand:hover {
+      transform: scale(1.1); /* Slightly larger hover effect */
+    }
+
+    .navbar-menu {
+      display: flex;
+      gap: 2rem;
+    }
+
+    /* Enhanced Navbar Buttons */
+    .navbar-menu a {
+      color: #fff;
+      text-decoration: none;
+      font-size: 1rem;
+      padding: 0.8rem 1.5rem;
+      border-radius: 50px;
+      border: 2px solid transparent;
+      transition: background-color 0.4s ease, border-color 0.4s ease, transform 0.3s ease;
+    }
+
+    .navbar-menu a:hover {
+      background-color: #3498db;
+      border-color: #3498db;
+      transform: scale(1.1); /* Slight hover effect */
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .navbar-menu a:active {
+      transform: scale(0.98);
+    }
+
+    /* Hero Section */
+    .hero-section {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: linear-gradient(135deg, #007bff 0%, #6610f2 100%);
+      color: #fff;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      animation: gradientBackground 8s ease infinite;
+    }
+
+    .hero-drop-container {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1;
+    }
+
+    .drop {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background-color: #fff;
+      position: absolute;
+      top: -100px;
+      animation: drop-fall 1s forwards, drop-expand-horizontal 0.8s 1s forwards;
+    }
+
+    @keyframes drop-fall {
+      0% {
+        top: -100px;
+      }
+      100% {
+        top: 40%;
+      }
+    }
+
+    @keyframes drop-expand-horizontal {
+      0% {
+        width: 50px;
+        height: 50px;
+      }
+      100% {
+        width: 600px;
+        height: 50px;
+        border-radius: 25px;
+      }
+    }
+
+    .hero-content {
+      z-index: 2;
+      opacity: 0;
+      transition: opacity 1s ease, transform 1s ease;
+      position: relative;
+      transform: translateY(30px);
+    }
+
+    .hero-content h1 {
+      font-size: 4rem; /* Slightly larger font */
+      font-family: 'Roboto', sans-serif; /* Changed font for a sleek look */
+      font-weight: 700;
+      margin-bottom: 1rem;
+      opacity: 0;
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+
+    .hero-content h1 span {
+      color: #fff;
+    }
+
+    /* Enhanced CTA Button */
+    .cta-button {
+      background: linear-gradient(135deg, #007bff, #6610f2);
+      color: #fff;
+      padding: 1rem 2.5rem;
+      border: none;
+      border-radius: 50px;
+      font-size: 1.3rem;
+      cursor: pointer;
+      transition: all 0.4s ease;
+      margin-top: 2rem;
+      display: inline-block;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+      transform: translateY(0);
+      text-decoration: none;
+    }
+
+    .cta-button:hover {
+      background: linear-gradient(135deg, #6610f2, #007bff);
+      transform: translateY(-5px) scale(1.05);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    }
+
+    .cta-button:active {
+      transform: scale(0.97);
+    }
+
+    /* Floating Shapes with Slower Animation */
+    .floating-shapes {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .floating-shapes span {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background-color: rgba(255, 255, 255, 0.5);
+      animation: float 8s infinite ease-in-out;
+    }
+
+    @keyframes float {
+      0% {
+        transform: translateY(0px);
+      }
+      50% {
+        transform: translateY(-100px);
+      }
+      100% {
+        transform: translateY(0px);
+      }
+    }
+
+    /* About Section Enhancements */
+    .about-section {
+      background-color: #fff;
+      padding: 5rem 0;
+      opacity: 1;
+      transition: opacity 1.5s ease, transform 1.5s ease;
+    }
+
+    .section-title {
+      font-size: 2.5rem;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 1.5rem;
+      color: #333;
+    }
+
+    .section-description {
+      text-align: center;
+      max-width: 700px;
+      margin: 0 auto 3rem;
+      color: #6c757d;
+    }
+
+    .about-content {
+      display: flex;
+      justify-content: space-around;
+      flex-wrap: wrap;
+      gap: 2rem;
+    }
+
+    .about-item {
+      flex: 1;
+      max-width: 300px;
+      text-align: center;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .about-item:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    .about-item i {
+      font-size: 3rem;
+      color: #007bff;
+      margin-bottom: 1rem;
+    }
+
+    /* Fake Review Detector Section */
+    .detector-section {
+      background-color: #f8f9fa;
+      padding: 5rem 0;
+      text-align: center;
+      animation: fadeIn 1.5s ease-in-out;
+    }
+
+    .detector-section h2 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 1rem;
+    }
+
+    .detector-content {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 2rem;
+      background-color: #fff;
+      border-radius: 10px;
+      box-shadow: 0px 15px 30px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease;
+    }
+
+    .detector-content:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    .detector-content textarea {
+      width: 100%;
+      padding: 15px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 1rem;
+      margin-bottom: 20px;
+    }
+
+    .analyze-btn {
+      background-color: #007bff;
+      color: white;
+      padding: 15px 30px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.3s ease;
+    }
+
+    .analyze-btn:hover {
+      background-color: #6610f2;
+      transform: scale(1.05);
+    }
+
+    .result-box {
+      margin-top: 20px;
+      padding: 20px;
+      background-color: #ecf0f1;
+      border-radius: 10px;
+      box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .result, .confidence {
+      font-size: 1.2rem;
+      color: #333;
+    }
+
+    /* Meet the Team Section */
+    .team-section {
+      background-color: #fff;
+      padding: 5rem 0;
+      text-align: center;
+    }
+
+    .team-section h2 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 1.5rem;
+      animation: fadeInUp 1.5s ease-in-out;
+    }
+
+    .team-content {
+      display: flex;
+      justify-content: space-around;
+      flex-wrap: wrap;
+      gap: 2rem;
+    }
+
+    .team-member {
+      flex: 1;
+      max-width: 300px;
+      text-align: center;
+      padding: 2rem;
+      background-color: #fff;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      animation: fadeInUp 1.5s ease-in-out;
+    }
+
+    .team-member:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    .team-member img {
+      border-radius: 50%;
+      width: 100px;
+      height: 100px;
+      margin-bottom: 1rem;
+    }
+
+    .team-member h3 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+      color: #333;
+    }
+
+    .team-member p {
+      font-size: 1rem;
+      color: #6c757d;
+    }
+
+    /* Feedback Form Section */
+    .feedback-section {
+      background-color: #f8f9fa;
+      padding: 5rem 0;
+      text-align: center;
+      animation: fadeIn 2s ease-in-out;
+    }
+
+    .feedback-section h2 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 1.5rem;
+    }
+
+    .feedback-form {
+      max-width: 600px;
+      margin: 0 auto;
+      display: grid;
+      gap: 1rem;
+    }
+
+    .feedback-form input, .feedback-form textarea {
+      width: 100%;
+      padding: 1rem;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+      font-size: 1rem;
+    }
+
+    .feedback-form button {
+      padding: 1rem;
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .feedback-form button:hover {
+      background-color: #6610f2;
+    }
+
+    /* Footer */
+    .footer {
+      background-color: #343a40;
+      color: #fff;
+      padding: 2rem 0;
+      text-align: center;
+    }
+
+    .footer p {
+      margin: 0;
+      font-size: 1rem;
+    }
+
+    .footer-icons {
+      margin-top: 1rem;
+    }
+
+    .footer-icons a {
+      margin: 0 10px;
+      color: #fff;
+      font-size: 1.5rem;
+      transition: transform 0.3s ease, color 0.3s ease;
+    }
+
+    .footer-icons a:hover {
+      color: #3498db;
+      transform: scale(1.2);
+    }
+
+    /* Global Animations */
+    @keyframes fadeInUp {
+      0% {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeIn {
+      0% {
+        opacity: 0;
+      }
+      100% {
+        opacity: 1;
+      }
+    }
+
+    @keyframes gradientBackground {
+      0% {
+        background-position: 0% 50%;
+      }
+      50% {
+        background-position: 100% 50%;
+      }
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+
+    /* Scroll fade-in effect */
+    section {
+      opacity: 0;
+      transition: opacity 1.5s ease, transform 1.5s ease;
+      transform: translateY(50px);
+    }
+
+    section.active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+  </style>
 </head>
 <body>
-    <header>
-        <h1>Fake Review Detector</h1>
-        <button class="dark-mode-toggle" onclick="toggleDarkMode()">Toggle Dark Mode</button>
-    </header>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a href="#" class="navbar-brand">FakeReviewDetector</a>
+    <ul class="navbar-menu">
+      <li><a href="#home">Home</a></li>
+      <li><a href="#about">About</a></li>
+      <li><a href="#detector">Detector</a></li>
+      <li><a href="#team">Team</a></li>
+      <li><a href="#feedback">Feedback</a></li>
+    </ul>
+  </nav>
 
-    <!-- Hero Section -->
-    <section class="hero">
-        <div class="content">
-            <h1>Identify Fake Reviews Instantly</h1>
-            <p>Join us in making online reviews trustworthy again.</p>
-            <a href="#fake-review-form" class="cta" onclick="removeHeroSection()">Get Started</a>
-        </div>
-    </section>
-
-    <!-- Fake Review Detector Section -->
-   <div id="fake-review-form" class="fake-review-form">
-    <div class="form-container">
-        <h2>Fake Review Detector</h2>
-        <form action="/predict" method="post">
-            <textarea name="review" rows="5" cols="40" placeholder="Enter a review..."></textarea><br>
-            <input type="submit" value="Analyze Review">
-        </form>
-        <div class="result-container">
-            <!-- Prediction and confidence will be dynamically updated here -->
-        </div>
+  <!-- Hero Section -->
+  <section id="home" class="hero-section">
+    <div class="hero-drop-container">
+      <div class="drop"></div>
     </div>
+
+    <div class="floating-shapes">
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+
+    <div class="hero-content">
+      <h1><span>Welcome to</span> <br> <span>Fake Review Detector</span></h1>
+      <a href="#detector" class="cta-button">Get Started</a>
+    </div>
+  </section>
+
+  <!-- About Section -->
+  <section id="about" class="about-section section-light">
+    <div class="container">
+      <h2 class="section-title">About Us</h2>
+      <p class="section-description">We provide reliable tools for detecting fake reviews using advanced AI technology.</p>
+      <div class="about-content">
+        <div class="about-item">
+          <i class="fas fa-brain"></i>
+          <h3>Advanced AI</h3>
+          <p>Powered by AI technology to detect patterns in reviews.</p>
+        </div>
+        <div class="about-item">
+          <i class="fas fa-search"></i>
+          <h3>Data Analysis</h3>
+          <p>Data-driven insights to differentiate between real and fake reviews.</p>
+        </div>
+        <div class="about-item">
+          <i class="fas fa-shield-alt"></i>
+          <h3>Trust & Security</h3>
+          <p>Ensuring reliable feedback for businesses and customers.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Detector Section -->
+  <section id="detector" class="detector-section section-dark">
+    <div class="container">
+      <h2>Analyze a Review</h2>
+      <div class="detector-content">
+        <textarea id="review-input" rows="5" placeholder="Paste the review here..."></textarea>
+        <button class="analyze-btn" onclick="analyzeReview()">Analyze</button>
+        <div id="ai-result" class="result-box hidden">
+          <p id="result-text"></p>
+        </div>
+      </div>
+<div id="ai-result" class="result-box hidden">
+  <p id="result-text"></p>
+  <p id="confidence-text"></p>
 </div>
-
-
-
-    <!-- Collapsible Code Snippet Section -->
-    <div class="code-snippet-container">
-        <h3>Review Detection Code Snippet</h3>
-        <button class="code-snippet-toggle" onclick="toggleCodeSnippet()">Show Code</button>
-        <div class="code-snippet">
-            <pre>
-def detect_fake_review(review_text):
-    """
-    This function analyzes the review text and returns a prediction
-    and a confidence score indicating whether the review is fake.
-    """
-    # Preprocess the review text
-    processed_text = preprocess(review_text)
-
-    # Predict using the trained model
-    prediction = model.predict(processed_text)
-
-    # Calculate confidence
-    confidence = model.predict_proba(processed_text)
-
-    return prediction, confidence
-            </pre>
-        </div>
     </div>
+  </section>
 
-    <!-- Combined Introduction and Video Section -->
-    <div class="intro-video-container">
-        <h3>Know More About Our Project</h3>
-        <p>We aim to identify fake reviews using advanced machine learning algorithms. Join us on our journey to make online reviews trustworthy.</p>
-        <iframe src="https://www.youtube.com/embed/xvFZjo5PgG0?si=09OzmdQN09CDqK9U"></iframe>
-    </div>
-
-    <!-- Team Section -->
-    <div class="team" id="team">
-        <h2>Meet Our Team</h2>
+  <!-- Meet the Team Section -->
+  <section id="team" class="team-section">
+    <div class="container">
+      <h2>Meet the Team</h2>
+      <div class="team-content">
         <div class="team-member">
-            <img src="https://randomuser.me/api/portraits/men/1.jpg" alt="Team Member 1">
-            <h3>Suneet Rohra</h3>
-            <p>Team Leader</p>
+          <img src="images/member1.jpg" alt="Team Member 1">
+          <h3>John Doe</h3>
+          <p>Lead Developer</p>
         </div>
         <div class="team-member">
-            <img src="https://randomuser.me/api/portraits/men/2.jpg" alt="Team Member 2">
-            <h3>Pavan Modha</h3>
-            <p>Data Handler</p>
+          <img src="images/member2.jpg" alt="Team Member 2">
+          <h3>Jane Smith</h3>
+          <p>AI Specialist</p>
         </div>
         <div class="team-member">
-            <img src="https://randomuser.me/api/portraits/women/3.jpg" alt="Team Member 3">
-            <h3>Sharanya Holla</h3>
-            <p>Researcher</p>
+          <img src="images/member3.jpg" alt="Team Member 3">
+          <h3>Michael Brown</h3>
+          <p>Data Analyst</p>
         </div>
+        <div class="team-member">
+          <img src="images/member4.jpg" alt="Team Member 4">
+          <h3>Emily Davis</h3>
+          <p>UX/UI Designer</p>
+        </div>
+      </div>
     </div>
+  </section>
 
-    <!-- Suggestions Section -->
-    <div class="suggestions">
-        <h2>Do You Have Any Suggestions for Us to Improve?</h2>
-        <form id="suggestionForm" action="/submit_feedback" method="post">
-            <textarea name="feedback" rows="5" cols="40" placeholder="We'd love to hear your thoughts!" required></textarea><br><br>
-            <input type="submit" value="Submit">
-        </form>
-        <div class="response-message">We've received your suggestion. Thank you!</div>
+  <!-- Feedback Form Section -->
+  <section id="feedback" class="feedback-section">
+    <div class="container">
+      <h2>We Value Your Feedback</h2>
+      <form class="feedback-form">
+        <input type="text" placeholder="Your Name" required>
+        <input type="email" placeholder="Your Email" required>
+        <textarea placeholder="Your Feedback" rows="5" required></textarea>
+        <button type="submit">Submit</button>
+      </form>
     </div>
+  </section>
 
-    <!-- Contribution Section -->
-    <div class="contribute">
-        <h2>Want to Contribute to Our Project?</h2>
-        <p>Submit a review you believe is true or false, and help us improve our model!</p>
-        <form id="contributionForm" action="/submit_review" method="post">
-            <label for="contribute-review">Upload a review file (optional):</label><br><br>
-            <input type="file" name="contribute-review"><br><br>
-            <label for="review">Or enter a review:</label><br>
-            <textarea name="review" rows="5" cols="40"></textarea><br>
-            <div class="radio-container">
-                <label><input type="radio" name="review-type" value="true"> True</label>
-                <label><input type="radio" name="review-type" value="false"> False</label>
-            </div>
-            <input type="submit" value="Submit">
-            <div class="response-message">Thank you! We have received your review.</div>
-        </form>
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; 2024 FakeReviewDetector. All Rights Reserved.</p>
+      <div class="footer-icons">
+        <a href="#"><i class="fab fa-twitter"></i></a>
+        <a href="#"><i class="fab fa-facebook-f"></i></a>
+        <a href="#"><i class="fab fa-instagram"></i></a>
+      </div>
     </div>
+  </footer>
 
-    <!-- Back to Top Button -->
-    <div id="backToTop" class="back-to-top" onclick="scrollToTop()">&#8679;</div>
+  <script>
 
-    <!-- Footer Section -->
-    <footer>
-        <p>&copy; 2024 Fake Review Detector. All Rights Reserved.</p>
-        <p>Contact Email: <a href="mailto:TeamAlpha_fakereviewdetector@gmail.com">TeamAlpha_fakereviewdetector@gmail.com</a></p>
-    </footer>
+  function analyzeReview() {
+    const reviewText = document.getElementById('review-input').value;
+    const resultContainer = document.getElementById('ai-result');
+    const resultText = document.getElementById('result-text');
+    const confidenceText = document.getElementById('confidence-text');
+
+    // Clear previous result
+    resultText.textContent = "Analyzing...";
+    confidenceText.textContent = "";
+    resultContainer.classList.remove('hidden');
+
+    // Send the review to the Flask backend using AJAX (Fetch API)
+    fetch('http://localhost:5000/analyze', {  // URL to your Flask route
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ review: reviewText }) // Sending review text as JSON
+    })
+    .then(response => response.json()) // Parse the response as JSON
+    .then(data => {
+      // Update the UI with the prediction and confidence score
+      resultText.textContent = `This review is ${data.prediction}.`;
+      confidenceText.textContent = `Confidence: ${data.confidence}%`;
+    })
+    .catch(error => {
+      resultText.textContent = "Error analyzing the review.";
+      console.error('Error:', error); // Log any errors
+    });
+  }
+
+    window.addEventListener('scroll', function () {
+      const navbar = document.querySelector('.navbar');
+      if (window.scrollY > 50) {
+        navbar.classList.add('active');
+      } else {
+        navbar.classList.remove('active');
+      }
+    });
+
+    document.querySelector('.drop').addEventListener('animationend', function() {
+      const heroContent = document.querySelector('.hero-content');
+      heroContent.style.opacity = '1';
+      heroContent.style.transform = 'translateY(0)';
+    });
+
+    window.addEventListener('scroll', () => {
+      const sections = document.querySelectorAll('section');
+      const scrollY = window.pageYOffset;
+
+      sections.forEach((section) => {
+        const sectionTop = section.offsetTop - window.innerHeight / 1.3;
+        if (scrollY > sectionTop) {
+          section.classList.add('active');
+        }
+      });
+    });
+  </script>
 </body>
 </html>
