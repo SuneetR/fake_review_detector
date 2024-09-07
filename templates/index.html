@@ -11,8 +11,94 @@
   <!-- Font Awesome for Icons -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
 
-  <style>
-    /* General Styles */
+<style>
+
+body.light-mode {
+  background-color: #ffffff;
+  color: #000000;
+}
+
+
+
+button {
+  padding: 10px 20px;
+  border-radius: 8px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #6610f2;
+}
+.card {
+  width: 300px;
+  height: 400px;
+  perspective: 1000px;
+}
+
+.card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.8s;
+  transform-style: preserve-3d;
+}
+
+.card:hover .card-inner {
+  transform: rotateY(180deg);
+}
+
+.card-front, .card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+}
+
+.card-front {
+  background-color: #f1f1f1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+.card-back {
+  background-color: #007bff;
+  color: white;
+  transform: rotateY(180deg);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.typed-text {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #333;
+  white-space: nowrap;
+  border-right: 0.1em solid black;
+  overflow: hidden;
+}
+
+.typing {
+  animation: typing 3.5s steps(40, end), blink 0.75s step-end infinite;
+}
+
+@keyframes typing {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+@keyframes blink {
+  50% { border-color: transparent; }
+}
+
+ /* General Styles */
     * {
       margin: 0;
       padding: 0;
@@ -189,9 +275,6 @@
       text-decoration: none;
     }
 
-[data-theme='dark'] .cta-button {
-  background: linear-gradient(135deg, #6610f2, #007bff);
-}
 
     .cta-button:hover {
       background: linear-gradient(135deg, #6610f2, #007bff);
@@ -386,6 +469,7 @@
 
 
  /* Meet the Team Section */
+/* Meet the Team Section */
 .team-section {
   background-color: #f8f9fa;
   padding: 5rem 0;
@@ -416,13 +500,16 @@
   background-color: #fff;
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
   cursor: pointer;
+  position: relative; /* Ensures smooth hover effects */
+  z-index: 1;
 }
 
 .team-member:hover {
-  transform: translateY(-10px);
+  transform: scale(1.05); /* Slight scale for card expansion */
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+  z-index: 2; /* Ensures the hovered card stays above others */
 }
 
 .team-member img {
@@ -430,6 +517,11 @@
   width: 100px;
   height: 100px;
   margin-bottom: 1rem;
+  transition: transform 0.3s ease;
+}
+
+.team-member:hover img {
+  transform: scale(1.1); /* Slight zoom on hover */
 }
 
 .team-member h3, .team-member p {
@@ -449,7 +541,7 @@
   box-shadow: 0 16px 32px rgba(0, 0, 0, 0.2);
   opacity: 0;
   transition: transform 0.5s ease, opacity 0.5s ease;
-  z-index: 100;
+  z-index: 1000; /* Ensure it's above other content */
 }
 
 .details-section.show {
@@ -457,9 +549,11 @@
   opacity: 1;
 }
 
-.details-content {
-  text-align: left;
+.team-content.blur {
+  filter: blur(10px);
+  transition: filter 0.5s ease;
 }
+
 
 .close-btn {
   position: absolute;
@@ -494,6 +588,16 @@
     transform: translateY(0);
   }
 }
+
+/* Hover effects for entire section */
+.team-member:hover {
+  transform: translateY(-10px);
+}
+
+.team-member:hover img {
+  transform: scale(1.1);
+}
+
 
 
 
@@ -631,7 +735,7 @@
   }
 }
 
-  </style>
+</style>
 </head>
 <body>
   <!-- Navbar -->
@@ -662,10 +766,11 @@
     </div>
 
     <div class="hero-content">
-      <h1><span>Welcome to</span> <br> <span>Fake Review Detector</span></h1>
+      <h1><span id="typed-heading"></span> <br> <span>Fake Review Detector</span></h1>
       <a href="#detector" class="cta-button">Get Started</a>
     </div>
   </section>
+
 
   <!-- About Section -->
   <section id="about" class="about-section section-light">
@@ -713,22 +818,30 @@
     <h2>Meet the Team</h2>
     <div class="team-content">
       <div class="team-member" data-member-id="member1">
-        <img src="images/member1.jpg" alt="Team Member 1">
+        <div class="member-image">
+          <img src="images/member1.jpg" alt="Team Member 1">
+        </div>
         <h3>John Doe</h3>
         <p>Lead Developer</p>
       </div>
       <div class="team-member" data-member-id="member2">
-        <img src="images/member2.jpg" alt="Team Member 2">
+        <div class="member-image">
+          <img src="images/member2.jpg" alt="Team Member 2">
+        </div>
         <h3>Jane Smith</h3>
         <p>AI Specialist</p>
       </div>
       <div class="team-member" data-member-id="member3">
-        <img src="images/member3.jpg" alt="Team Member 3">
+        <div class="member-image">
+          <img src="images/member3.jpg" alt="Team Member 3">
+        </div>
         <h3>Michael Brown</h3>
         <p>Data Analyst</p>
       </div>
       <div class="team-member" data-member-id="member4">
-        <img src="images/member4.jpg" alt="Team Member 4">
+        <div class="member-image">
+          <img src="images/member4.jpg" alt="Team Member 4">
+        </div>
         <h3>Emily Davis</h3>
         <p>UX/UI Designer</p>
       </div>
@@ -740,9 +853,6 @@
     </div>
   </div>
 </section>
-
-
-
 
   <!-- Feedback Form Section -->
   <section id="feedback" class="feedback-section">
@@ -769,15 +879,20 @@
     </div>
   </footer>
 
+
   <script>
 
- function analyzeReview() {
+function analyzeReview() {
     const review = document.getElementById('review-input').value;
 
     if (!review) {
         alert("Please enter a review.");
         return;
     }
+
+    // Show a loading message while reviewing
+    document.getElementById('result-text').innerText = "Analyzing...";
+    document.getElementById('confidence-text').innerText = '';
 
     fetch('/analyze', {
         method: 'POST',
@@ -786,12 +901,7 @@
         },
         body: JSON.stringify({ review: review })
     })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok.');
-        }
-        return response.json();
-    })
+    .then(response => response.json())
     .then(data => {
         if (data.error) {
             document.getElementById('result-text').innerText = `Error: ${data.error}`;
@@ -799,122 +909,176 @@
         } else {
             document.getElementById('result-text').innerText = `Prediction: ${data.prediction}`;
             document.getElementById('confidence-text').innerText = `Confidence: ${data.confidence}%`;
+            triggerConfetti();  // Trigger confetti on successful prediction
         }
         document.getElementById('ai-result').classList.remove('hidden');
     })
-    .catch(error => console.error('Error:', error));
+    .catch(error => {
+        console.error('Error:', error);
+        document.getElementById('result-text').innerText = `Error: ${error}`;
+        document.getElementById('confidence-text').innerText = '';
+    });
 }
 
-    window.addEventListener('scroll', function () {
-      const navbar = document.querySelector('.navbar');
-      if (window.scrollY > 50) {
+
+window.addEventListener('scroll', function () {
+    const navbar = document.querySelector('.navbar');
+    if (window.scrollY > 50) {
         navbar.classList.add('active');
-      } else {
+    } else {
         navbar.classList.remove('active');
-      }
-    });
+    }
+});
 
-    document.querySelector('.drop').addEventListener('animationend', function() {
-      const heroContent = document.querySelector('.hero-content');
-      heroContent.style.opacity = '1';
-      heroContent.style.transform = 'translateY(0)';
-    });
+document.querySelector('.drop').addEventListener('animationend', function() {
+    const heroContent = document.querySelector('.hero-content');
+    heroContent.style.opacity = '1';
+    heroContent.style.transform = 'translateY(0)';
+});
 
-    window.addEventListener('scroll', () => {
-      const sections = document.querySelectorAll('section');
-      const scrollY = window.pageYOffset;
-
-      sections.forEach((section) => {
-        const sectionTop = section.offsetTop - window.innerHeight / 1.3;
-        if (scrollY > sectionTop) {
-          section.classList.add('active');
-        }
-      });
-    });
-
- window.addEventListener('scroll', () => {
+window.addEventListener('scroll', () => {
     const sections = document.querySelectorAll('section');
     const scrollY = window.pageYOffset;
 
     sections.forEach((section) => {
-      const sectionTop = section.offsetTop - window.innerHeight / 1.3;
-      if (scrollY > sectionTop) {
-        section.classList.add('active');
-      }
+        const sectionTop = section.offsetTop - window.innerHeight / 1.3;
+        if (scrollY > sectionTop) {
+            section.classList.add('active');
+        }
     });
-  });
+});
 
-  function enableDarkMode() {
+function enableDarkMode() {
     const currentHour = new Date().getHours();
     if (currentHour >= 18 || currentHour < 6) {
-      document.body.setAttribute('data-theme', 'dark');  // Activate dark mode
+        document.body.setAttribute('data-theme', 'dark');  // Activate dark mode
     }
-  }
-  enableDarkMode();
+}
+enableDarkMode();
 
+// Toggle dark mode on button click
+document.getElementById('dark-mode-toggle').addEventListener('click', () => {
+    document.body.classList.toggle('dark-mode');
+    document.body.classList.toggle('light-mode');
+});
 
-document.addEventListener("DOMContentLoaded", function () {
-  const members = document.querySelectorAll(".team-member");
-  const detailsSection = document.getElementById("member-details");
-  const detailsContent = document.querySelector(".details-content");
-  const teamContent = document.querySelector(".team-content");
+// Keybinding for dark mode toggle (CTRL + D)
+document.addEventListener('keydown', (event) => {
+    if (event.ctrlKey && event.key === 'd') {
+        document.body.classList.toggle('dark-mode');
+        document.body.classList.toggle('light-mode');
+    }
+});
 
-  members.forEach(member => {
-    member.addEventListener("click", function () {
-      const memberId = this.getAttribute('data-member-id');
-      showDetails(memberId);
+// Typed Text Animation for headings/results
+function typeText() {
+    const typedText = document.getElementById('typed-heading');
+    const text = "Analyze a Review in Real Time!";
+    let i = 0;
+    function typingEffect() {
+        if (i < text.length) {
+            typedText.innerHTML += text.charAt(i);
+            i++;
+            setTimeout(typingEffect, 100);
+        }
+    }
+    typingEffect();
+}
 
-      // Blur other content
-      teamContent.classList.add("blur");
+window.onload = typeText;
 
-      // Show details section with animation
-      detailsSection.classList.add("show");
+// Confetti Effect
+function triggerConfetti() {
+    confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
     });
-  });
+}
 
-  function showDetails(memberId) {
-    let content = '';
-    switch (memberId) {
-      case 'member1':
-        content = `
-          <h3>John Doe</h3>
-          <p>Lead Developer</p>
-          <p>John has over 10 years of experience in full-stack development, leading innovative projects.</p>
-        `;
-        break;
-      case 'member2':
-        content = `
-          <h3>Jane Smith</h3>
-          <p>AI Specialist</p>
-          <p>Jane is an expert in artificial intelligence with a background in machine learning and data science.</p>
-        `;
-        break;
-      case 'member3':
-        content = `
-          <h3>Michael Brown</h3>
-          <p>Data Analyst</p>
-          <p>Michael has a strong analytical mind and uncovers trends in complex datasets.</p>
-        `;
-        break;
-      case 'member4':
-        content = `
-          <h3>Emily Davis</h3>
-          <p>UX/UI Designer</p>
-          <p>Emily specializes in creating user-centered designs with a modern aesthetic.</p>
-        `;
-        break;
+// Easter Egg with key combination (CTRL + SHIFT + E)
+let keysPressed = {};
+document.addEventListener('keydown', (event) => {
+    keysPressed[event.key] = true;
+
+    if (keysPressed['Control'] && keysPressed['Shift'] && event.key === 'E') {
+        alert('Easter Egg Activated!');
+        triggerConfetti();  // Add confetti effect as an Easter egg
     }
-    detailsContent.innerHTML = content;
-  }
+});
 
-  window.closeDetails = function() {
-    detailsSection.classList.remove("show");
-    teamContent.classList.remove("blur");
-  }
+document.addEventListener('keyup', (event) => {
+    delete keysPressed[event.key];
+});
+document.addEventListener("DOMContentLoaded", function () {
+    const members = document.querySelectorAll(".team-member");
+    const detailsSection = document.getElementById("member-details");
+    const detailsContent = document.querySelector(".details-content");
+    const teamContent = document.querySelector(".team-content");
+
+    // Add event listeners to each team member to open the details modal
+    members.forEach(member => {
+        member.addEventListener("click", function () {
+            const memberId = this.getAttribute('data-member-id');
+            showDetails(memberId);
+
+            // Apply blur effect to team content and show modal
+            teamContent.classList.add("blur");
+            detailsSection.classList.add("show");
+        });
+    });
+
+    // Function to show the team member details
+    function showDetails(memberId) {
+        let content = '';
+        switch (memberId) {
+            case 'member1':
+                content = `
+                    <h3>John Doe</h3>
+                    <p>Lead Developer</p>
+                    <p>John has over 10 years of experience in full-stack development, leading innovative projects.</p>
+                `;
+                break;
+            case 'member2':
+                content = `
+                    <h3>Jane Smith</h3>
+                    <p>AI Specialist</p>
+                    <p>Jane is an expert in artificial intelligence with a background in machine learning and data science.</p>
+                `;
+                break;
+            case 'member3':
+                content = `
+                    <h3>Michael Brown</h3>
+                    <p>Data Analyst</p>
+                    <p>Michael has a strong analytical mind and uncovers trends in complex datasets.</p>
+                `;
+                break;
+            case 'member4':
+                content = `
+                    <h3>Emily Davis</h3>
+                    <p>UX/UI Designer</p>
+                    <p>Emily specializes in creating user-centered designs with a modern aesthetic.</p>
+                `;
+                break;
+            default:
+                content = `<p>Member not found.</p>`;
+                break;
+        }
+
+        // Insert the generated content into the modal's content area
+        detailsContent.innerHTML = content;
+    }
+
+    // Function to close the details modal and remove the blur effect
+    window.closeDetails = function() {
+        detailsSection.classList.remove("show");
+        teamContent.classList.remove("blur");
+    };
 });
 
 
 
-  </script>
+</script>
+
 </body>
 </html>
