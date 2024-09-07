@@ -286,73 +286,104 @@
       margin-bottom: 1rem;
     }
 
-    /* Fake Review Detector Section */
-    .detector-section {
-      background-color: #f8f9fa;
-      padding: 5rem 0;
-      text-align: center;
-      animation: fadeIn 1.5s ease-in-out;
-    }
+.detector-section {
+  background-color: #f8f9fa;
+  padding: 5rem 0;
+  text-align: center;
+  animation: fadeIn 1.5s ease-in-out;
+}
 
-    .detector-section h2 {
-      font-size: 2.5rem;
-      font-weight: 700;
-      color: #333;
-      margin-bottom: 1rem;
-    }
+.detector-section h2 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 1rem;
+}
 
-    .detector-content {
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 2rem;
-      background-color: #fff;
-      border-radius: 10px;
-      box-shadow: 0px 15px 30px rgba(0, 0, 0, 0.1);
-      transition: transform 0.3s ease;
-    }
+.detector-content {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 2rem;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0px 15px 30px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
 
-    .detector-content:hover {
-      transform: translateY(-10px);
-      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-    }
+.detector-content:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
 
-    .detector-content textarea {
-      width: 100%;
-      padding: 15px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 1rem;
-      margin-bottom: 20px;
-    }
+.detector-content textarea {
+  width: 100%;
+  padding: 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+  margin-bottom: 20px;
+  transition: border 0.3s ease;
+}
 
-    .analyze-btn {
-      background-color: #007bff;
-      color: white;
-      padding: 15px 30px;
-      border: none;
-      border-radius: 8px;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: background-color 0.3s ease, transform 0.3s ease;
-    }
+.detector-content textarea:focus {
+  border-color: #007bff;
+  outline: none;
+}
 
-    .analyze-btn:hover {
-      background-color: #6610f2;
-      transform: scale(1.05);
-    }
+.analyze-btn {
+  background-color: #007bff;
+  color: white;
+  padding: 15px 30px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
 
-    .result-box {
-      margin-top: 20px;
-      padding: 20px;
-      background-color: #ecf0f1;
-      border-radius: 10px;
-      box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.1);
-    }
+.analyze-btn:hover {
+  background-color: #6610f2;
+  transform: scale(1.05);
+}
 
-    .result, .confidence {
-      font-size: 1.2rem;
-      color: #333;
-    }
+.analyze-btn:focus {
+  outline: 2px solid #6610f2;
+  outline-offset: 2px;
+}
+
+.result-box {
+  margin-top: 20px;
+  padding: 20px;
+  background-color: #ecf0f1;
+  border-radius: 10px;
+  box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.result, .confidence {
+  font-size: 1.2rem;
+  color: #333;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .detector-section h2 {
+    font-size: 2rem;
+  }
+
+  .detector-content {
+    padding: 1.5rem;
+  }
+
+  .analyze-btn {
+    padding: 12px 24px;
+    font-size: 0.9rem;
+  }
+
+  .result, .confidence {
+    font-size: 1rem;
+  }
+}
+
 
  /* Meet the Team Section */
 .team-section {
