@@ -1,9 +1,10 @@
-from flask import Flask, request, render_template, redirect, url_for
-from fake_review_detector import predict_review  # Removed update_model
+from flask import Flask, request, render_template, jsonify, redirect, url_for
+from fake_review_detector import predict_review  # Import your model's prediction function
 import os
 import nltk
 import logging
 import gc
+from flask_cors import CORS
 
 # Ensure only necessary NLTK resources are downloaded
 try:
@@ -22,6 +23,7 @@ except LookupError:
     nltk.download('wordnet')
 
 app = Flask(__name__)
+CORS(app)  # Allow cross-origin requests from your front-end
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -51,24 +53,27 @@ def store_review(review, review_type):
 def home():
     return render_template('index.html')
 
-@app.route('/predict', methods=['POST'])
-def predict():
-    review = request.form.get('review')
-    product_type = request.form.get('product_type')
-
-    if not review:
-        return render_template('index.html', error="Please provide a review.")
-
+# Route for predicting review using AJAX
+@app.route('/analyze', methods=['POST'])
+def analyze_review():
     try:
-        result, confidence = predict_review(review, product_type)
-        del review, product_type
-        gc.collect()
-        return render_template('index.html', prediction=result, confidence=f"{confidence:.2f}")
+        data = request.json
+        review = data.get('review')
+
+        if not review:
+            return jsonify({'error': 'Review content is missing.'}), 400
+
+        # Get prediction from the model
+        prediction, confidence = predict_review(review)
+
+        return jsonify({
+            'prediction': prediction,
+            'confidence': confidence
+        })
 
     except Exception as e:
         logger.error(f"Error during prediction: {e}")
-        gc.collect()
-        return render_template('index.html', error=f"An error occurred during prediction: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/submit_feedback', methods=['POST'])
 def submit_feedback():
@@ -93,7 +98,6 @@ def submit_review():
 
     try:
         store_review(review, review_type)
-        # Removed model update code since update_model is not used
         logger.info(f"Received review: {review}, Type: {review_type}")
         del review, review_type
         gc.collect()
