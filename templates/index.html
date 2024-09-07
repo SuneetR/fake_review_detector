@@ -354,62 +354,117 @@
       color: #333;
     }
 
-    /* Meet the Team Section */
-    .team-section {
-      background-color: #fff;
-      padding: 5rem 0;
-      text-align: center;
-    }
+ /* Meet the Team Section */
+.team-section {
+  background-color: #f8f9fa;
+  padding: 5rem 0;
+  text-align: center;
+  position: relative;
+}
 
-    .team-section h2 {
-      font-size: 2.5rem;
-      font-weight: 700;
-      color: #333;
-      margin-bottom: 1.5rem;
-      animation: fadeInUp 1.5s ease-in-out;
-    }
+.team-section h2 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 1.5rem;
+  animation: fadeInUp 1.5s ease-in-out;
+}
 
-    .team-content {
-      display: flex;
-      justify-content: space-around;
-      flex-wrap: wrap;
-      gap: 2rem;
-    }
+.team-content {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 2rem;
+}
 
-    .team-member {
-      flex: 1;
-      max-width: 300px;
-      text-align: center;
-      padding: 2rem;
-      background-color: #fff;
-      border-radius: 10px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-      animation: fadeInUp 1.5s ease-in-out;
-    }
+.team-member {
+  flex: 1;
+  max-width: 300px;
+  text-align: center;
+  padding: 2rem;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+}
 
-    .team-member:hover {
-      transform: translateY(-10px);
-      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-    }
+.team-member:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+}
 
-    .team-member img {
-      border-radius: 50%;
-      width: 100px;
-      height: 100px;
-      margin-bottom: 1rem;
-    }
+.team-member img {
+  border-radius: 50%;
+  width: 100px;
+  height: 100px;
+  margin-bottom: 1rem;
+}
 
-    .team-member h3 {
-      font-size: 1.5rem;
-      margin-bottom: 0.5rem;
-      color: #333;
-    }
+.team-member h3, .team-member p {
+  color: #333;
+}
 
-    .team-member p {
-      font-size: 1rem;
-      color: #6c757d;
-    }
+.details-section {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  width: 70%;
+  max-width: 700px;
+  padding: 2rem;
+  background-color: #fff;
+  border-radius: 20px;
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  transition: transform 0.5s ease, opacity 0.5s ease;
+  z-index: 100;
+}
+
+.details-section.show {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+}
+
+.details-content {
+  text-align: left;
+}
+
+.close-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 2rem;
+  cursor: pointer;
+  color: #999;
+  transition: color 0.3s ease;
+}
+
+.close-btn:hover {
+  color: #333;
+}
+
+/* Background blur when modal is open */
+.team-content.blur {
+  filter: blur(10px);
+  transition: filter 0.5s ease;
+}
+
+/* Keyframes */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
 
     /* Feedback Form Section */
     .feedback-section {
@@ -606,8 +661,8 @@
     </div>
   </section>
 
-  <!-- Detector Section -->
-  <section id="detector" class="detector-section section-dark">
+ <!-- Detector Section -->
+<section id="detector" class="detector-section section-dark">
     <div class="container">
         <h2>Analyze a Review</h2>
         <div class="detector-content">
@@ -621,34 +676,42 @@
     </div>
 </section>
 
-  <!-- Meet the Team Section -->
-  <section id="team" class="team-section">
-    <div class="container">
-      <h2>Meet the Team</h2>
-      <div class="team-content">
-        <div class="team-member">
-          <img src="images/member1.jpg" alt="Team Member 1">
-          <h3>John Doe</h3>
-          <p>Lead Developer</p>
-        </div>
-        <div class="team-member">
-          <img src="images/member2.jpg" alt="Team Member 2">
-          <h3>Jane Smith</h3>
-          <p>AI Specialist</p>
-        </div>
-        <div class="team-member">
-          <img src="images/member3.jpg" alt="Team Member 3">
-          <h3>Michael Brown</h3>
-          <p>Data Analyst</p>
-        </div>
-        <div class="team-member">
-          <img src="images/member4.jpg" alt="Team Member 4">
-          <h3>Emily Davis</h3>
-          <p>UX/UI Designer</p>
-        </div>
+<!-- Meet the Team Section -->
+<section id="team" class="team-section">
+  <div class="container">
+    <h2>Meet the Team</h2>
+    <div class="team-content">
+      <div class="team-member" data-member-id="member1">
+        <img src="images/member1.jpg" alt="Team Member 1">
+        <h3>John Doe</h3>
+        <p>Lead Developer</p>
+      </div>
+      <div class="team-member" data-member-id="member2">
+        <img src="images/member2.jpg" alt="Team Member 2">
+        <h3>Jane Smith</h3>
+        <p>AI Specialist</p>
+      </div>
+      <div class="team-member" data-member-id="member3">
+        <img src="images/member3.jpg" alt="Team Member 3">
+        <h3>Michael Brown</h3>
+        <p>Data Analyst</p>
+      </div>
+      <div class="team-member" data-member-id="member4">
+        <img src="images/member4.jpg" alt="Team Member 4">
+        <h3>Emily Davis</h3>
+        <p>UX/UI Designer</p>
       </div>
     </div>
-  </section>
+    <!-- Expanded Member Details Modal -->
+    <div id="member-details" class="details-section">
+      <button class="close-btn" onclick="closeDetails()">×</button>
+      <div class="details-content"></div>
+    </div>
+  </div>
+</section>
+
+
+
 
   <!-- Feedback Form Section -->
   <section id="feedback" class="feedback-section">
@@ -677,24 +740,39 @@
 
   <script>
 
-  function analyzeReview() {
-        const review = document.getElementById('review-input').value;
+ function analyzeReview() {
+    const review = document.getElementById('review-input').value;
 
-        fetch('/analyze', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ review: review })
-        })
-        .then(response => response.json())
-        .then(data => {
+    if (!review) {
+        alert("Please enter a review.");
+        return;
+    }
+
+    fetch('/analyze', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ review: review })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok.');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.error) {
+            document.getElementById('result-text').innerText = `Error: ${data.error}`;
+            document.getElementById('confidence-text').innerText = '';
+        } else {
             document.getElementById('result-text').innerText = `Prediction: ${data.prediction}`;
             document.getElementById('confidence-text').innerText = `Confidence: ${data.confidence}%`;
-            document.getElementById('ai-result').classList.remove('hidden');
-        })
-        .catch(error => console.error('Error:', error));
-    }
+        }
+        document.getElementById('ai-result').classList.remove('hidden');
+    })
+    .catch(error => console.error('Error:', error));
+}
 
     window.addEventListener('scroll', function () {
       const navbar = document.querySelector('.navbar');
@@ -742,6 +820,70 @@
     }
   }
   enableDarkMode();
+
+
+document.addEventListener("DOMContentLoaded", function () {
+  const members = document.querySelectorAll(".team-member");
+  const detailsSection = document.getElementById("member-details");
+  const detailsContent = document.querySelector(".details-content");
+  const teamContent = document.querySelector(".team-content");
+
+  members.forEach(member => {
+    member.addEventListener("click", function () {
+      const memberId = this.getAttribute('data-member-id');
+      showDetails(memberId);
+
+      // Blur other content
+      teamContent.classList.add("blur");
+
+      // Show details section with animation
+      detailsSection.classList.add("show");
+    });
+  });
+
+  function showDetails(memberId) {
+    let content = '';
+    switch (memberId) {
+      case 'member1':
+        content = `
+          <h3>John Doe</h3>
+          <p>Lead Developer</p>
+          <p>John has over 10 years of experience in full-stack development, leading innovative projects.</p>
+        `;
+        break;
+      case 'member2':
+        content = `
+          <h3>Jane Smith</h3>
+          <p>AI Specialist</p>
+          <p>Jane is an expert in artificial intelligence with a background in machine learning and data science.</p>
+        `;
+        break;
+      case 'member3':
+        content = `
+          <h3>Michael Brown</h3>
+          <p>Data Analyst</p>
+          <p>Michael has a strong analytical mind and uncovers trends in complex datasets.</p>
+        `;
+        break;
+      case 'member4':
+        content = `
+          <h3>Emily Davis</h3>
+          <p>UX/UI Designer</p>
+          <p>Emily specializes in creating user-centered designs with a modern aesthetic.</p>
+        `;
+        break;
+    }
+    detailsContent.innerHTML = content;
+  }
+
+  window.closeDetails = function() {
+    detailsSection.classList.remove("show");
+    teamContent.classList.remove("blur");
+  }
+});
+
+
+
   </script>
 </body>
 </html>
