@@ -4,7 +4,7 @@ import os
 import nltk
 import logging
 import gc
-from flask_cors import CORS
+from flask_cors import CORS, cross_origin
 
 # Ensure only necessary NLTK resources are downloaded
 try:
@@ -55,6 +55,7 @@ def home():
 
 # Route for predicting review using AJAX
 @app.route('/analyze', methods=['POST'])
+@cross_origin()  # Enable CORS for this specific route
 def analyze_review():
     try:
         data = request.json
@@ -109,6 +110,7 @@ def submit_review():
         return render_template('index.html', error=f"An error occurred while storing the review: {str(e)}")
 
 if __name__ == '__main__':
+    # Create the feedback and reviews files if they don't exist
     if not os.path.exists(FEEDBACK_FILE_PATH):
         open(FEEDBACK_FILE_PATH, 'w').close()
     if not os.path.exists(REVIEWS_FILE_PATH):
