@@ -178,147 +178,159 @@ button:hover {
       transform: scale(0.98);
     }
 
-    /* Hero Section */
-    .hero-section {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      background: linear-gradient(135deg, #007bff 0%, #6610f2 100%);
-      color: #fff;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
-      animation: gradientBackground 8s ease infinite;
-    }
+/* Hero Section */
+.hero-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: linear-gradient(135deg, #007bff 0%, #6610f2 100%);
+  color: #fff;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
 
-    .hero-drop-container {
-      position: absolute;
-      top: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 100%;
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 1;
-    }
+.hero-drop-container {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1;
+}
 
-    .drop {
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      background-color: #fff;
-      position: absolute;
-      top: -100px;
-      animation: drop-fall 1s forwards, drop-expand-horizontal 0.8s 1s forwards;
-    }
+.drop {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: #fff;
+  position: absolute;
+  top: -100px;
+  animation: drop-fall 0.6s forwards, drop-expand-horizontal 0.5s 0.6s forwards; /* Faster animation */
+}
 
-    @keyframes drop-fall {
-      0% {
-        top: -100px;
-      }
-      100% {
-        top: 40%;
-      }
-    }
+@keyframes drop-fall {
+  0% {
+    top: -100px;
+  }
+  100% {
+    top: 40%;
+  }
+}
 
-    @keyframes drop-expand-horizontal {
-      0% {
-        width: 50px;
-        height: 50px;
-      }
-      100% {
-        width: 600px;
-        height: 50px;
-        border-radius: 25px;
-      }
-    }
+@keyframes drop-expand-horizontal {
+  0% {
+    width: 50px;
+    height: 50px;
+  }
+  100% {
+    width: 600px;
+    height: 50px;
+    border-radius: 25px;
+  }
+}
 
-    .hero-content {
-      z-index: 2;
+.hero-content {
+  z-index: 2;
   opacity: 0;
-  transition: opacity 1s ease, transform 1s ease;
+  transition: opacity 0.6s ease 1.1s, transform 0.6s ease 1.1s; /* Faster appearance */
   position: relative;
   transform: translateY(30px);
 }
 
-    .hero-content h1 {
-       font-size: 4rem;
+.hero-content h1 {
+  font-size: 4rem;
   font-weight: 700;
   margin-bottom: 1rem;
-  opacity: 0;
-  transition: opacity 0.5s ease, transform 0.5s ease;
-      font-family: 'Roboto', sans-serif; /* Changed font for a sleek look */
-      
-    }
+  font-family: 'Roboto', sans-serif;
+  overflow: hidden;
+  white-space: nowrap;
+}
 
-    .hero-content h1 span {
-      color: #fff;
-    }
+#typed-text {
+  display: inline-block;
+  border-right: 2px solid #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  width: 0;
+  animation: typing 1.5s steps(25) forwards; /* Faster typing */
+  animation-delay: 1.1s; /* Delayed slightly to align with drop animation */
+}
 
-    /* Enhanced CTA Button */
-    .cta-button {
-      background: linear-gradient(135deg, #007bff, #6610f2);
-      color: #fff;
-      padding: 1rem 2.5rem;
-      border: none;
-      border-radius: 50px;
-      font-size: 1.3rem;
-      cursor: pointer;
-      transition: all 0.4s ease;
-      margin-top: 2rem;
-      display: inline-block;
-      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
-      transform: translateY(0);
-      text-decoration: none;
-    }
+@keyframes typing {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
 
+/* Enhanced CTA Button */
+.cta-button {
+  background: linear-gradient(135deg, #007bff, #6610f2);
+  color: #fff;
+  padding: 1rem 2.5rem;
+  border: none;
+  border-radius: 50px;
+  font-size: 1.3rem;
+  cursor: pointer;
+  transition: all 0.4s ease;
+  margin-top: 2rem;
+  display: inline-block;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+  transform: translateY(0);
+  text-decoration: none;
+}
 
-    .cta-button:hover {
-      background: linear-gradient(135deg, #6610f2, #007bff);
-      transform: translateY(-5px) scale(1.05);
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-    }
+.cta-button:hover {
+  background: linear-gradient(135deg, #6610f2, #007bff);
+  transform: translateY(-5px) scale(1.05);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
 
-    .cta-button:active {
-      transform: scale(0.97);
-    }
+.cta-button:active {
+  transform: scale(0.97);
+}
 
-    /* Floating Shapes with Slower Animation */
-    .floating-shapes {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      z-index: 1;
-      pointer-events: none;
-    }
+/* Floating Shapes with Faster Animation */
+.floating-shapes {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  pointer-events: none;
+}
 
-    .floating-shapes span {
-      position: absolute;
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background-color: rgba(255, 255, 255, 0.5);
-      animation: float 8s infinite ease-in-out;
-    }
+.floating-shapes span {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.5);
+  animation: float 6s infinite ease-in-out; /* Faster floating shapes */
+}
 
-    @keyframes float {
-      0% {
-        transform: translateY(0px);
-      }
-      50% {
-        transform: translateY(-100px);
-      }
-      100% {
-        transform: translateY(0px);
-      }
-    }
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-100px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
 
-    /* About Section Enhancements */
+/* About Section Enhancements */
     .about-section {
       background-color: #fff;
       padding: 5rem 0;
@@ -368,6 +380,7 @@ button:hover {
       color: #007bff;
       margin-bottom: 1rem;
     }
+
 
 .detector-section {
   background-color: #f8f9fa;
@@ -750,26 +763,27 @@ button:hover {
     </ul>
   </nav>
 
-  <!-- Hero Section -->
-  <section id="home" class="hero-section">
-    <div class="hero-drop-container">
-      <div class="drop"></div>
-    </div>
+ <!-- Hero Section -->
+<section id="home" class="hero-section">
+  <div class="hero-drop-container">
+    <div class="drop"></div>
+  </div>
 
-    <div class="floating-shapes">
-      <span></span>
-      <span></span>
-      <span></span>
-      <span></span>
-      <span></span>
-      <span></span>
-    </div>
+  <div class="floating-shapes">
+    <span></span>
+    <span></span>
+    <span></span>
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
 
-    <div class="hero-content">
-      <h1><span id="typed-heading"></span> <br> <span>Fake Review Detector</span></h1>
-      <a href="#detector" class="cta-button">Get Started</a>
-    </div>
-  </section>
+  <div class="hero-content">
+    <h1 id="typed-heading"><span id="typed-text"></span></h1>
+    <a href="#detector" class="cta-button" aria-label="Get Started with the Fake Review Detector">Get Started</a>
+  </div>
+</section>
+
 
 
   <!-- About Section -->
@@ -797,7 +811,6 @@ button:hover {
     </div>
   </section>
 
- <!-- Detector Section -->
 <section id="detector" class="detector-section section-dark">
     <div class="container">
         <h2>Analyze a Review</h2>
@@ -807,6 +820,9 @@ button:hover {
             <div id="ai-result" class="result-box hidden">
                 <p id="result-text"></p>
                 <p id="confidence-text"></p>
+                <div class="bar-container">
+                    <div id="confidence-bar" class="bar"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -879,46 +895,50 @@ button:hover {
     </div>
   </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
 
   <script>
 
 function analyzeReview() {
     const review = document.getElementById('review-input').value;
 
-    if (!review) {
-        alert("Please enter a review.");
-        return;
-    }
+    // Clear previous results
+    document.getElementById('result-text').innerText = '';
+    document.getElementById('confidence-bar').style.width = '0%';
+    document.getElementById('confidence-bar').innerText = '';
+    document.getElementById('ai-result').classList.add('hidden');
 
-    // Show a loading message while reviewing
-    document.getElementById('result-text').innerText = "Analyzing...";
-    document.getElementById('confidence-text').innerText = '';
-
+    // Send the review to the Flask app using AJAX
     fetch('/analyze', {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ review: review })
+        body: JSON.stringify({ review }),
     })
     .then(response => response.json())
     .then(data => {
         if (data.error) {
             document.getElementById('result-text').innerText = `Error: ${data.error}`;
-            document.getElementById('confidence-text').innerText = '';
         } else {
+            // Show the prediction
             document.getElementById('result-text').innerText = `Prediction: ${data.prediction}`;
-            document.getElementById('confidence-text').innerText = `Confidence: ${data.confidence}%`;
-            triggerConfetti();  // Trigger confetti on successful prediction
+
+            // Update the confidence bar
+            const confidence = Math.round(data.confidence); // Round confidence to avoid decimals
+            document.getElementById('confidence-bar').style.width = `${confidence}%`;
+            document.getElementById('confidence-bar').innerText = `${confidence}%`;
+
+            // Show the result box
+            document.getElementById('ai-result').classList.remove('hidden');
         }
-        document.getElementById('ai-result').classList.remove('hidden');
     })
     .catch(error => {
+        document.getElementById('result-text').innerText = 'An error occurred during the prediction.';
         console.error('Error:', error);
-        document.getElementById('result-text').innerText = `Error: ${error}`;
-        document.getElementById('confidence-text').innerText = '';
     });
 }
+
 
 
 window.addEventListener('scroll', function () {
@@ -985,9 +1005,10 @@ function typeText() {
     typingEffect();
 }
 
+// Ensure the typed text animation starts when the page loads
 window.onload = typeText;
 
-// Confetti Effect
+// Confetti Effect Function
 function triggerConfetti() {
     confetti({
         particleCount: 100,
@@ -996,20 +1017,26 @@ function triggerConfetti() {
     });
 }
 
-// Easter Egg with key combination (CTRL + SHIFT + E)
+// Object to track keys that are pressed
 let keysPressed = {};
-document.addEventListener('keydown', (event) => {
-    keysPressed[event.key] = true;
 
-    if (keysPressed['Control'] && keysPressed['Shift'] && event.key === 'E') {
+// Keydown event listener
+document.addEventListener('keydown', (event) => {
+    // Convert keys to lowercase to avoid case-sensitivity issues
+    keysPressed[event.key.toLowerCase()] = true;
+
+    // Check if Control, Shift, and 'e' are pressed
+    if (keysPressed['control'] && keysPressed['shift'] && keysPressed['e']) {
         alert('Easter Egg Activated!');
-        triggerConfetti();  // Add confetti effect as an Easter egg
+        triggerConfetti();  // Trigger confetti effect
     }
 });
 
+// Keyup event listener to remove the key from the object when it is released
 document.addEventListener('keyup', (event) => {
-    delete keysPressed[event.key];
+    delete keysPressed[event.key.toLowerCase()];
 });
+
 document.addEventListener("DOMContentLoaded", function () {
     const members = document.querySelectorAll(".team-member");
     const detailsSection = document.getElementById("member-details");
@@ -1074,6 +1101,13 @@ document.addEventListener("DOMContentLoaded", function () {
         detailsSection.classList.remove("show");
         teamContent.classList.remove("blur");
     };
+});
+document.addEventListener('DOMContentLoaded', function () {
+  const heroContent = document.querySelector('.hero-content');
+  setTimeout(() => {
+    heroContent.style.opacity = '1';
+    heroContent.style.transform = 'translateY(0)';
+  }, 2000); // Matches the delay in the CSS
 });
 
 
