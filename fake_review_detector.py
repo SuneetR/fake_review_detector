@@ -1,3 +1,4 @@
+from flask import Flask, request, jsonify
 import nltk
 import numpy as np
 import pandas as pd
@@ -13,6 +14,8 @@ from nltk.corpus import stopwords
 from sentence_transformers import SentenceTransformer
 import gc
 import logging
+
+app = Flask(__name__)
 
 # Download necessary NLTK data
 nltk.download('stopwords')
@@ -79,7 +82,7 @@ def train_model(reviews, labels):
     # Free memory
     gc.collect()
 
-# Fix the predict_review function to take only one argument
+# Prediction function
 def predict_review(review):
     # Preprocess the review
     cleaned_review = preprocess_text(review)
@@ -108,6 +111,16 @@ def predict_review(review):
     
     # Return the prediction and confidence
     return prediction, confidence
+
+# Route for predicting a single review
+@app.route('/analyze', methods=['POST'])
+def analyze():
+    review = request.json.get('review')  # Get the review from the request
+    prediction, confidence = predict_review(review)  # Use the model's predict_review function
+    return jsonify({
+        'prediction': prediction,
+        'confidence': confidence
+    })
 
 # Evaluation function
 def evaluate_model(reviews, labels):
@@ -167,3 +180,6 @@ if __name__ == "__main__":
     
     # Evaluate the model
     evaluate_model(X_test, y_test)
+    
+    # Run Flask app
+    app.run(debug=True)
