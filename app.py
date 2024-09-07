@@ -56,6 +56,8 @@ def home():
 # Route for predicting review using AJAX
 @app.route('/analyze', methods=['POST'])
 @cross_origin()  # Enable CORS for this specific route
+@app.route('/analyze', methods=['POST'])
+@cross_origin()
 def analyze_review():
     try:
         data = request.json
