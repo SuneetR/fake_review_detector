@@ -1,6 +1,5 @@
 from flask import Flask, request, jsonify
-import numpy as np
-from fake_review_detector import predict_fake_review  # Import the function from your script
+from fake_review_detector import predict_review  # Import the function from your script
 
 app = Flask(__name__)
 
@@ -17,9 +16,8 @@ def analyze_review():
         return jsonify({'error': 'No review provided'}), 400
 
     try:
-        # Call your prediction function from the fake_review_detector.py module
-        prediction, confidence = predict_fake_review(review)
-
+        # Use the predict_review function from fake_review_detector.py
+        prediction, confidence = predict_review(review)
         return jsonify({'prediction': prediction, 'confidence': confidence})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
