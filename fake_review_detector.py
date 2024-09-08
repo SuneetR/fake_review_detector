@@ -45,7 +45,7 @@ model_name = "sentence-transformers/paraphrase-albert-small-v2"
 sbert_model = SentenceTransformer(model_name)
 
 # Get embeddings
-def get_sbert_embeddings(text_data, batch_size=32):
+def get_sbert_embeddings(text_data, batch_size=4):
     try:
         logging.debug(f"Generating SBERT embeddings for {len(text_data)} reviews.")
         embeddings = []
