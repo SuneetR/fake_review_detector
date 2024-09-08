@@ -1,3 +1,4 @@
+import os
 from flask import Flask, request, jsonify, render_template
 from fake_review_detector import predict_review, load_reviews, train_model
 import logging
@@ -44,5 +45,6 @@ def analyze():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    # Run the Flask app on a specified host and port
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    # Use the PORT environment variable provided by Render
+    port = int(os.environ.get("PORT", 10000))  # Default to 10000, Render's default
+    app.run(host='0.0.0.0', port=port, debug=True)
