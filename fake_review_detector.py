@@ -182,4 +182,4 @@ if __name__ == "__main__":
     evaluate_model(X_test, y_test)
     
     # Run Flask app
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000)  # Run the app on all available IPs
