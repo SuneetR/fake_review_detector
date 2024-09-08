@@ -13,6 +13,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from nltk.corpus import stopwords
 from sentence_transformers import SentenceTransformer
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import confusion_matrix, classification_report
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
@@ -140,7 +141,13 @@ def evaluate_model(reviews, labels):
 
         y_pred = stacking_model.predict(combined_features)
         
-        # Calculate and log evaluation metrics here if necessary
+        # Calculate and log evaluation metrics
+        cm = confusion_matrix(labels, y_pred)
+        logging.debug(f"Confusion Matrix:\n{cm}")
+
+        report = classification_report(labels, y_pred, target_names=["Genuine", "Fake"])
+        logging.debug(f"Classification Report:\n{report}")
+
         logging.debug("Evaluation complete.")
     except Exception as e:
         logging.error(f"Error during evaluation: {e}")
@@ -154,8 +161,9 @@ if __name__ == "__main__":
     reviews = df['review']
     labels = df['label']
 
-    # Split the data for training and testing
-    X_train, X_test, y_train, y_test = train_test_split(reviews, labels, test_size=0.2, random_state=42)
+    # Limit testing set to 200 samples
+    test_size = min(200, len(reviews) // 5)  # Set the test size to 200 or a fraction of the data
+    X_train, X_test, y_train, y_test = train_test_split(reviews, labels, test_size=test_size, random_state=42)
 
     # Train the model
     train_model(X_train, y_train)
