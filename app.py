@@ -44,4 +44,5 @@ def analyze():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Run the Flask app on a specified host and port
+    app.run(host='0.0.0.0', port=5000, debug=True)
