@@ -828,6 +828,7 @@ button:hover {
     </div>
 </section>
 
+
 <!-- Meet the Team Section -->
 <section id="team" class="team-section">
   <div class="container">
@@ -925,7 +926,7 @@ function analyzeReview() {
             document.getElementById('result-text').innerText = `Prediction: ${data.prediction}`;
 
             // Update the confidence bar
-            const confidence = Math.round(data.confidence); // Round confidence to avoid decimals
+            const confidence = Math.round(data.confidence * 100); // Multiply by 100 to convert to percentage
             document.getElementById('confidence-bar').style.width = `${confidence}%`;
             document.getElementById('confidence-bar').innerText = `${confidence}%`;
 
