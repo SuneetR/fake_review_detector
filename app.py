@@ -7,6 +7,10 @@ app = Flask(__name__)
 # Load the pre-trained model
 model = joblib.load('model.pkl')  # Update with your actual model path
 
+@app.route('/')
+def index():
+    return "Fake Review Detector API"
+
 @app.route('/analyze', methods=['POST'])
 def analyze_review():
     data = request.json  # Get the JSON data from the POST request
