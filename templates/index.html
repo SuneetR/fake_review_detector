@@ -901,39 +901,51 @@ button:hover {
   <script>
 
     function analyzeReview() {
-        const review = document.getElementById('review-input').value;
-        
-        // Check if the review input is not empty
-        if (review === "") {
-            alert("Please provide a review.");
-            return;
+    const review = document.getElementById('review-input').value;
+
+    // Check if the review input is not empty
+    if (review === "") {
+        alert("Please provide a review.");
+        return;
+    }
+
+    // Make an AJAX request to the Flask server
+    fetch('/analyze', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ review: review }),
+    })
+    .then(response => {
+        // Check if the response status is OK (status 200)
+        if (!response.ok) {
+            throw new Error(`Server error: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        // Check if there was an error in the response
+        if (data.error) {
+            throw new Error(`Prediction error: ${data.error}`);
         }
 
-        // Make an AJAX request to the Flask server
-        fetch('/analyze', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ review: review }),
-        })
-        .then(response => response.json())
-        .then(data => {
-            // Show the AI result
-            document.getElementById('ai-result').classList.remove('hidden');
-            document.getElementById('result-text').textContent = `Prediction: ${data.prediction}`;
-            document.getElementById('confidence-text').textContent = `Confidence: ${data.confidence}%`;
+        // Show the AI result
+        document.getElementById('ai-result').classList.remove('hidden');
+        document.getElementById('result-text').textContent = `Prediction: ${data.prediction}`;
+        document.getElementById('confidence-text').textContent = `Confidence: ${data.confidence}%`;
 
-            // Update confidence bar
-            const confidenceBar = document.getElementById('confidence-bar');
-            confidenceBar.style.width = `${data.confidence}%`;
-            confidenceBar.textContent = `${data.confidence}%`;
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert("An error occurred while analyzing the review.");
-        });
-    }
+        // Update confidence bar
+        const confidenceBar = document.getElementById('confidence-bar');
+        confidenceBar.style.width = `${data.confidence}%`;
+        confidenceBar.textContent = `${data.confidence}%`;
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert(`An error occurred: ${error.message}`);
+    });
+}
+
 
 
 
