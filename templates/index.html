@@ -900,45 +900,42 @@ button:hover {
 
   <script>
 
-function analyzeReview() {
-    const review = document.getElementById('review-input').value;
-
-    // Clear previous results
-    document.getElementById('result-text').innerText = '';
-    document.getElementById('confidence-bar').style.width = '0%';
-    document.getElementById('confidence-bar').innerText = '';
-    document.getElementById('ai-result').classList.add('hidden');
-
-    // Send the review to the Flask app using AJAX
-    fetch('/analyze', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ review }),
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.error) {
-            document.getElementById('result-text').innerText = `Error: ${data.error}`;
-        } else {
-            // Show the prediction
-            document.getElementById('result-text').innerText = `Prediction: ${data.prediction}`;
-
-            // Update the confidence bar
-            const confidence = Math.round(data.confidence * 100); // Multiply by 100 to convert to percentage
-            document.getElementById('confidence-bar').style.width = `${confidence}%`;
-            document.getElementById('confidence-bar').innerText = `${confidence}%`;
-
-            // Show the result box
-            document.getElementById('ai-result').classList.remove('hidden');
+<script>
+    function analyzeReview() {
+        const review = document.getElementById('review-input').value;
+        
+        // Check if the review input is not empty
+        if (review === "") {
+            alert("Please provide a review.");
+            return;
         }
-    })
-    .catch(error => {
-        document.getElementById('result-text').innerText = 'An error occurred during the prediction.';
-        console.error('Error:', error);
-    });
-}
+
+        // Make an AJAX request to the Flask server
+        fetch('/analyze', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ review: review }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Show the AI result
+            document.getElementById('ai-result').classList.remove('hidden');
+            document.getElementById('result-text').textContent = `Prediction: ${data.prediction}`;
+            document.getElementById('confidence-text').textContent = `Confidence: ${data.confidence}%`;
+
+            // Update confidence bar
+            const confidenceBar = document.getElementById('confidence-bar');
+            confidenceBar.style.width = `${data.confidence}%`;
+            confidenceBar.textContent = `${data.confidence}%`;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert("An error occurred while analyzing the review.");
+        });
+    }
+</script>
 
 
 
