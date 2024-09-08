@@ -118,9 +118,12 @@ def analyze():
         data = request.get_json()
         review = data.get('review', '')
         if not review:
+            logging.error("No review provided.")
             return jsonify({'error': 'No review provided'}), 400
 
         prediction, confidence = predict_review(review)
+        gc.collect()  # Ensure memory is cleared after prediction
+
         return jsonify({
             'prediction': prediction,
             'confidence': confidence
