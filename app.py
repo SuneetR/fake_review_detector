@@ -1,11 +1,8 @@
 from flask import Flask, request, jsonify
 import numpy as np
-import joblib  # Assuming you are using joblib to load your model
+from fake_review_detector import predict_fake_review  # Import the function from your script
 
 app = Flask(__name__)
-
-# Load the pre-trained model
-model = joblib.load('fake_review_detector.py')  # Update with your actual model path
 
 @app.route('/')
 def index():
@@ -20,20 +17,10 @@ def analyze_review():
         return jsonify({'error': 'No review provided'}), 400
 
     try:
-        # Preprocess the review before making a prediction
-        # Assuming you have some preprocessing steps
-        # Convert input to a suitable format (e.g., NumPy array)
-        input_data = np.array([review])  # Wrap review in a list and convert to a NumPy array
+        # Call your prediction function from the fake_review_detector.py module
+        prediction, confidence = predict_fake_review(review)
 
-        # Get the prediction and confidence score
-        prediction = model.predict(input_data)  # Ensure model input is a NumPy array
-        confidence = model.predict_proba(input_data).max()  # Confidence score
-
-        # Convert the NumPy results to Python lists if needed
-        prediction_list = prediction.tolist() if isinstance(prediction, np.ndarray) else prediction
-        confidence_list = confidence.tolist() if isinstance(confidence, np.ndarray) else confidence
-
-        return jsonify({'prediction': prediction_list[0], 'confidence': confidence_list})  # Access the first element
+        return jsonify({'prediction': prediction, 'confidence': confidence})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
