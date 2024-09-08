@@ -56,8 +56,6 @@ def home():
 # Route for predicting review using AJAX
 @app.route('/analyze', methods=['POST'])
 @cross_origin()  # Enable CORS for this specific route
-@app.route('/analyze', methods=['POST'])
-@cross_origin()
 def analyze_review():
     try:
         data = request.json
@@ -118,4 +116,5 @@ if __name__ == '__main__':
     if not os.path.exists(REVIEWS_FILE_PATH):
         open(REVIEWS_FILE_PATH, 'w').close()
 
-    app.run(debug=False)
+    # Run the app on all available network interfaces
+    app.run(host='0.0.0.0')
