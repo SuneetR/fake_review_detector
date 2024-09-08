@@ -1,10 +1,11 @@
+import os
 import logging
 import gc
 import string
 import nltk
 import numpy as np
 import pandas as pd
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from sklearn.decomposition import PCA
 from sklearn.ensemble import StackingClassifier
 from sklearn.linear_model import LogisticRegression
@@ -22,6 +23,7 @@ logging.basicConfig(level=logging.DEBUG)
 nltk.download('stopwords')
 stop_words = set(stopwords.words('english'))
 
+# Initialize Flask app
 app = Flask(__name__)
 
 # Function to load CSV reviews
@@ -174,5 +176,6 @@ if __name__ == "__main__":
     # Evaluate the model
     evaluate_model(X_test, y_test)
 
-    # Run the Flask app
-    app.run(host='0.0.0.0', port=5000)
+    # Use the dynamic port provided by Render
+    port = int(os.environ.get("PORT", 10000))  # Default to 10000, Render's default
+    app.run(host='0.0.0.0', port=port)
