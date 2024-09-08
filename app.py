@@ -5,7 +5,7 @@ import joblib  # Assuming you are using joblib to load your model
 app = Flask(__name__)
 
 # Load the pre-trained model
-model = joblib.load('model.pkl')  # Update with your actual model path
+model = joblib.load('fake_review_detector.py')  # Update with your actual model path
 
 @app.route('/')
 def index():
