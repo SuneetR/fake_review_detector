@@ -31,7 +31,7 @@ def load_reviews(file_path):
 # Tokenizer
 def basic_tokenize(text):
     tokens = text.lower().split()
-    tokens are [word.strip(string.punctuation) for word in tokens]
+    tokens = [word.strip(string.punctuation) for word in tokens]
     return tokens
 
 # Preprocessing function
