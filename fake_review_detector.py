@@ -23,9 +23,6 @@ logging.basicConfig(level=logging.DEBUG)
 nltk.download('stopwords')
 stop_words = set(stopwords.words('english'))
 
-# Initialize Flask app
-app = Flask(__name__)
-
 # Function to load CSV reviews
 def load_reviews(file_path):
     logging.debug(f"Loading reviews from {file_path}")
@@ -113,27 +110,6 @@ def predict_review(review):
         logging.error(f"Error during prediction: {e}")
         raise
 
-# Flask route to handle review analysis
-@app.route('/analyze', methods=['POST'])
-def analyze():
-    try:
-        data = request.get_json()
-        review = data.get('review', '')
-        if not review:
-            logging.error("No review provided.")
-            return jsonify({'error': 'No review provided'}), 400
-
-        prediction, confidence = predict_review(review)
-        gc.collect()  # Ensure memory is cleared after prediction
-
-        return jsonify({
-            'prediction': prediction,
-            'confidence': confidence
-        })
-    except Exception as e:
-        logging.error(f"Error in /analyze: {e}")
-        return jsonify({'error': str(e)}), 500
-
 # Model evaluation function
 def evaluate_model(reviews, labels):
     try:
@@ -157,25 +133,3 @@ def evaluate_model(reviews, labels):
     except Exception as e:
         logging.error(f"Error during evaluation: {e}")
         raise
-
-if __name__ == "__main__":
-    # Load reviews and labels from CSV
-    df = load_reviews('reviews.csv')
-
-    # Assuming the CSV has two columns: 'review' and 'label' (0 or 1 for fake/real)
-    reviews = df['review']
-    labels = df['label']
-
-    # Limit testing set to 200 samples
-    test_size = min(200, len(reviews) // 5)  # Set the test size to 200 or a fraction of the data
-    X_train, X_test, y_train, y_test = train_test_split(reviews, labels, test_size=test_size, random_state=42)
-
-    # Train the model
-    train_model(X_train, y_train)
-
-    # Evaluate the model
-    evaluate_model(X_test, y_test)
-
-    # Use the dynamic port provided by Render
-    port = int(os.environ.get("PORT", 10000))  # Default to 10000, Render's default
-    app.run(host='0.0.0.0', port=port)
