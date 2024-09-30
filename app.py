@@ -3,18 +3,37 @@ from flask import Flask, request, jsonify, render_template
 from fake_review_detector import predict_review, load_reviews, train_model
 import logging
 import gc
+import pickle
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
 
 app = Flask(__name__)
 
-# Train the model when the app starts
-logging.debug("Loading reviews.csv and training the model...")
-df = load_reviews('reviews.csv')
-reviews = df['review']
-labels = df['label']
-train_model(reviews, labels)
+MODEL_PATH = 'trained_model.pkl'
+
+def load_or_train_model():
+    """
+    Load the model from disk if it exists, otherwise train a new one and save it.
+    """
+    if os.path.exists(MODEL_PATH):
+        logging.debug(f"Loading pre-trained model from {MODEL_PATH}")
+        with open(MODEL_PATH, 'rb') as model_file:
+            return pickle.load(model_file)
+    else:
+        logging.debug("No pre-trained model found. Training the model from scratch...")
+        df = load_reviews('reviews.csv')
+        reviews = df['review']
+        labels = df['label']
+        model = train_model(reviews, labels)
+        logging.debug(f"Saving the trained model to {MODEL_PATH}")
+        with open(MODEL_PATH, 'wb') as model_file:
+            pickle.dump(model, model_file)
+        return model
+
+# Load or train the model when the app starts
+logging.debug("Initializing app and loading or training model...")
+model = load_or_train_model()
 
 @app.route('/')
 def home():
