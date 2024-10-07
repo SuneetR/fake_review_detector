@@ -47,7 +47,7 @@ def preprocess_text(text):
     return ' '.join(cleaned_tokens)
 
 # Function to get embeddings using SBERT
-def get_sbert_embeddings(text_data, batch_size=4):
+def get_sbert_embeddings(text_data, batch_size=32):
     try:
         logging.debug(f"Generating SBERT embeddings for {len(text_data)} reviews.")
         embeddings = []
@@ -65,8 +65,8 @@ def load_reviews(file_path):
     return pd.read_csv(file_path)
 
 # Model setup
-tfidf_vectorizer = TfidfVectorizer(max_features=5000)
-pca = PCA(n_components=100)
+tfidf_vectorizer = TfidfVectorizer(max_features=2000)
+pca = PCA(n_components=50)
 stacking_model = StackingClassifier(
     estimators=[
         ('lr', LogisticRegression(max_iter=1000)),
