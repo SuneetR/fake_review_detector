@@ -11,7 +11,6 @@ from sklearn.linear_model import LogisticRegression
 from xgboost import XGBClassifier
 from sklearn.feature_extraction.text import TfidfVectorizer
 from nltk.corpus import stopwords
-from sentence_transformers import SentenceTransformer
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix, classification_report
 import pickle
@@ -30,10 +29,6 @@ app = Flask(__name__)
 # Model path for saving/loading
 MODEL_PATH = 'trained_model.pkl'
 
-# Load sentence-transformer model
-model_name = "sentence-transformers/paraphrase-albert-small-v2"
-sbert_model = SentenceTransformer(model_name)
-
 # Tokenizer
 def basic_tokenize(text):
     tokens = text.lower().split()
@@ -45,19 +40,6 @@ def preprocess_text(text):
     tokens = basic_tokenize(text)
     cleaned_tokens = [word for word in tokens if word not in stop_words]
     return ' '.join(cleaned_tokens)
-
-# Function to get embeddings using SBERT
-def get_sbert_embeddings(text_data, batch_size=4):
-    try:
-        logging.debug(f"Generating SBERT embeddings for {len(text_data)} reviews.")
-        embeddings = []
-        for i in range(0, len(text_data), batch_size):
-            batch_embeddings = sbert_model.encode(text_data[i:i + batch_size].tolist(), convert_to_numpy=True)
-            embeddings.append(batch_embeddings)
-        return np.vstack(embeddings)
-    except Exception as e:
-        logging.error(f"Error generating embeddings: {e}")
-        raise
 
 # Function to load reviews from CSV
 def load_reviews(file_path):
@@ -80,12 +62,10 @@ def train_model(reviews, labels):
     try:
         logging.debug("Starting model training...")
         cleaned_reviews = reviews.apply(preprocess_text)
-        sbert_embeddings = get_sbert_embeddings(cleaned_reviews)
         tfidf_features = tfidf_vectorizer.fit_transform(cleaned_reviews)
-        sbert_embeddings_pca = pca.fit_transform(sbert_embeddings)
-        combined_features = np.hstack((tfidf_features.toarray(), sbert_embeddings_pca))
+        tfidf_features_pca = pca.fit_transform(tfidf_features.toarray())
 
-        stacking_model.fit(combined_features, labels)
+        stacking_model.fit(tfidf_features_pca, labels)
         logging.debug("Model training complete.")
 
         # Save the trained model to disk
@@ -118,11 +98,10 @@ def predict_review(review):
         cleaned_review = preprocess_text(review)
         logging.debug(f"Cleaned review: {cleaned_review}")
 
-        sbert_embedding = pca.transform(get_sbert_embeddings([cleaned_review]))
         tfidf_features = tfidf_vectorizer.transform([cleaned_review])
-        combined_features = np.hstack((tfidf_features.toarray(), sbert_embedding))
+        tfidf_features_pca = pca.transform(tfidf_features.toarray())
 
-        probabilities = stacking_model.predict_proba(combined_features)[0]
+        probabilities = stacking_model.predict_proba(tfidf_features_pca)[0]
         prob_genuine = probabilities[0]
         prob_fake = probabilities[1]
 
@@ -164,12 +143,10 @@ def evaluate_model(reviews, labels):
     try:
         logging.debug("Evaluating the model...")
         cleaned_reviews = reviews.apply(preprocess_text)
-        sbert_embeddings = get_sbert_embeddings(cleaned_reviews)
         tfidf_features = tfidf_vectorizer.transform(cleaned_reviews)
-        sbert_embeddings_pca = pca.transform(sbert_embeddings)
-        combined_features = np.hstack((tfidf_features.toarray(), sbert_embeddings_pca))
+        tfidf_features_pca = pca.transform(tfidf_features.toarray())
 
-        y_pred = stacking_model.predict(combined_features)
+        y_pred = stacking_model.predict(tfidf_features_pca)
 
         # Calculate evaluation metrics
         cm = confusion_matrix(labels, y_pred)
