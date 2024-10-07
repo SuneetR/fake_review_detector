@@ -47,7 +47,7 @@ def preprocess_text(text):
     return ' '.join(cleaned_tokens)
 
 # Function to get embeddings using SBERT
-def get_sbert_embeddings(text_data, batch_size=32):
+def get_sbert_embeddings(text_data, batch_size=4):
     try:
         logging.debug(f"Generating SBERT embeddings for {len(text_data)} reviews.")
         embeddings = []
