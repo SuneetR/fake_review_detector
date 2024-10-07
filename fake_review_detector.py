@@ -124,9 +124,6 @@ def analyze():
             logging.error("No review provided.")
             return jsonify({'error': 'No review provided'}), 400
 
-        # Load model if not already loaded
-        load_trained_model()
-
         prediction, confidence = predict_review(review)
         gc.collect()
 
@@ -138,30 +135,11 @@ def analyze():
         logging.error(f"Error in /analyze route: {e}")
         return jsonify({'error': str(e)}), 500
 
-# Function to evaluate the model
-def evaluate_model(reviews, labels):
-    try:
-        logging.debug("Evaluating the model...")
-        cleaned_reviews = reviews.apply(preprocess_text)
-        tfidf_features = tfidf_vectorizer.transform(cleaned_reviews)
-        tfidf_features_pca = pca.transform(tfidf_features.toarray())
-
-        y_pred = stacking_model.predict(tfidf_features_pca)
-
-        # Calculate evaluation metrics
-        cm = confusion_matrix(labels, y_pred)
-        logging.debug(f"Confusion Matrix:\n{cm}")
-
-        report = classification_report(labels, y_pred, target_names=["Genuine", "Fake"])
-        logging.debug(f"Classification Report:\n{report}")
-
-        logging.debug("Evaluation complete.")
-    except Exception as e:
-        logging.error(f"Error during evaluation: {e}")
-        raise
-
 # Main application start point
 if __name__ == "__main__":
+    # Load model when the app starts
+    load_trained_model()
+
     # Load reviews and labels from CSV
     df = load_reviews('reviews.csv')
     
@@ -172,8 +150,9 @@ if __name__ == "__main__":
     test_size = min(200, len(reviews) // 5)  # Set the test size to 200 or fraction of data
     X_train, X_test, y_train, y_test = train_test_split(reviews, labels, test_size=test_size, random_state=42)
 
-    # Train the model
-    train_model(X_train, y_train)
+    # Train the model if needed
+    if not os.path.exists(MODEL_PATH):
+        train_model(X_train, y_train)
 
     # Evaluate the model
     evaluate_model(X_test, y_test)
