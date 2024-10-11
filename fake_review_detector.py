@@ -13,7 +13,6 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from nltk.corpus import stopwords
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix, classification_report
-import pickle
 from flask import Flask, request, jsonify
 
 # Set up logging
@@ -26,10 +25,7 @@ stop_words = set(stopwords.words('english'))
 # Initialize Flask app
 app = Flask(__name__)
 
-# Model path for saving/loading
-MODEL_PATH = 'trained_model.pkl'
-
-# Tokenizer
+# Tokenizer function
 def basic_tokenize(text):
     tokens = text.lower().split()
     tokens = [word.strip(string.punctuation) for word in tokens]
@@ -67,28 +63,9 @@ def train_model(reviews, labels):
 
         stacking_model.fit(tfidf_features_pca, labels)
         logging.debug("Model training complete.")
-
-        # Save the trained model to disk
-        with open(MODEL_PATH, 'wb') as model_file:
-            pickle.dump((stacking_model, tfidf_vectorizer, pca), model_file)
         gc.collect()
     except Exception as e:
         logging.error(f"Error during model training: {e}")
-        raise
-
-# Function to load the pre-trained model
-def load_trained_model():
-    try:
-        if os.path.exists(MODEL_PATH):
-            logging.debug(f"Loading trained model from {MODEL_PATH}")
-            with open(MODEL_PATH, 'rb') as model_file:
-                global stacking_model, tfidf_vectorizer, pca
-                stacking_model, tfidf_vectorizer, pca = pickle.load(model_file)
-            logging.debug("Model loaded successfully.")
-        else:
-            logging.error(f"Model file {MODEL_PATH} not found. Please train the model first.")
-    except Exception as e:
-        logging.error(f"Error loading the model: {e}")
         raise
 
 # Function to predict review
@@ -135,11 +112,18 @@ def analyze():
         logging.error(f"Error in /analyze route: {e}")
         return jsonify({'error': str(e)}), 500
 
+# Function to evaluate the model
+def evaluate_model(X_test, y_test):
+    cleaned_reviews = X_test.apply(preprocess_text)
+    tfidf_features = tfidf_vectorizer.transform(cleaned_reviews)
+    tfidf_features_pca = pca.transform(tfidf_features.toarray())
+
+    y_pred = stacking_model.predict(tfidf_features_pca)
+    logging.debug("Confusion Matrix:\n" + str(confusion_matrix(y_test, y_pred)))
+    logging.debug("Classification Report:\n" + str(classification_report(y_test, y_pred)))
+
 # Main application start point
 if __name__ == "__main__":
-    # Load model when the app starts
-    load_trained_model()
-
     # Load reviews and labels from CSV
     df = load_reviews('reviews.csv')
     
@@ -150,11 +134,10 @@ if __name__ == "__main__":
     test_size = min(200, len(reviews) // 5)  # Set the test size to 200 or fraction of data
     X_train, X_test, y_train, y_test = train_test_split(reviews, labels, test_size=test_size, random_state=42)
 
-    # Train the model if needed
-    if not os.path.exists(MODEL_PATH):
-        train_model(X_train, y_train)
+    # Train the model
+    train_model(X_train, y_train)
 
-    # Evaluate the model
+    # Evaluate the model on test data
     evaluate_model(X_test, y_test)
 
     # Run the Flask app, ensuring dynamic port allocation
