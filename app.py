@@ -11,7 +11,7 @@ from sklearn.linear_model import LogisticRegression
 from xgboost import XGBClassifier
 from sklearn.feature_extraction.text import TfidfVectorizer
 from nltk.corpus import stopwords
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
@@ -83,6 +83,12 @@ def predict_review(review):
     except Exception as e:
         logging.error(f"Error during prediction: {e}")
         raise
+
+# Route for Home Page (Serve index.html)
+@app.route('/')
+def home():
+    # Renders the index.html file from the templates folder
+    return render_template('index.html')
 
 # API route for analyzing review sentiment
 @app.route('/analyze', methods=['POST'])
