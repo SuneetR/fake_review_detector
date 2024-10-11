@@ -977,26 +977,7 @@ window.addEventListener('scroll', () => {
 });
 
 function enableDarkMode() {
-    const currentHour = new Date().getHours();
-    if (currentHour >= 18 || currentHour < 6) {
-        document.body.setAttribute('data-theme', 'dark');  // Activate dark mode
-    }
-}
-enableDarkMode();
-
-// Toggle dark mode on button click
-document.getElementById('dark-mode-toggle').addEventListener('click', () => {
-    document.body.classList.toggle('dark-mode');
-    document.body.classList.toggle('light-mode');
-});
-
-// Keybinding for dark mode toggle (CTRL + D)
-document.addEventListener('keydown', (event) => {
-    if (event.ctrlKey && event.key === 'd') {
-        document.body.classList.toggle('dark-mode');
-        document.body.classList.toggle('light-mode');
-    }
-});
+z
 
 // Typed Text Animation for headings/results
 function typeText() {
@@ -1014,7 +995,7 @@ function typeText() {
 }
 
 // Ensure the typed text animation starts when the page loads
-window.onload = typeText;
+window.onload = typeText();
 
 // Confetti Effect Function
 function triggerConfetti() {
