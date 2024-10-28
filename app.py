@@ -4,7 +4,6 @@ import gc
 import string
 import nltk
 import numpy as np
-import pickle
 from sklearn.decomposition import PCA
 from sklearn.ensemble import StackingClassifier
 from sklearn.linear_model import LogisticRegression
@@ -23,9 +22,6 @@ stop_words = set(stopwords.words('english'))
 # Initialize Flask app
 app = Flask(__name__)
 
-# Model path for saving/loading
-MODEL_PATH = 'trained_model.pkl'
-
 # Tokenizer function
 def basic_tokenize(text):
     tokens = text.lower().split()
@@ -37,22 +33,6 @@ def preprocess_text(text):
     tokens = basic_tokenize(text)
     cleaned_tokens = [word for word in tokens if word not in stop_words]
     return ' '.join(cleaned_tokens)
-
-# Load trained model and vectorizer
-def load_trained_model():
-    try:
-        if os.path.exists(MODEL_PATH):
-            logging.debug(f"Loading trained model from {MODEL_PATH}")
-            with open(MODEL_PATH, 'rb') as model_file:
-                global stacking_model, tfidf_vectorizer, pca
-                stacking_model, tfidf_vectorizer, pca = pickle.load(model_file)
-            logging.debug("Model loaded successfully.")
-        else:
-            logging.error(f"Model file {MODEL_PATH} not found. Please train the model first.")
-            raise FileNotFoundError("Trained model file not found.")
-    except Exception as e:
-        logging.error(f"Error loading the model: {e}")
-        raise
 
 # Function to predict a review
 def predict_review(review):
@@ -87,7 +67,6 @@ def predict_review(review):
 # Route for Home Page (Serve index.html)
 @app.route('/')
 def home():
-    # Renders the index.html file from the templates folder
     return render_template('index.html')
 
 # API route for analyzing review sentiment
@@ -100,9 +79,6 @@ def analyze():
         if not review:
             logging.error("No review provided.")
             return jsonify({'error': 'No review provided'}), 400
-
-        # Load model if not already loaded
-        load_trained_model()
 
         # Make the prediction
         prediction, confidence = predict_review(review)
@@ -119,9 +95,6 @@ def analyze():
 
 # Start the Flask application
 if __name__ == "__main__":
-    # Load model when the server starts
-    load_trained_model()
-
     # Start the Flask app on a dynamic port
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
