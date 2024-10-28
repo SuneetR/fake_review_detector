@@ -4,8 +4,4 @@ scikit-learn
 pandas
 numpy
 nltk
-imbalanced-learn
-shap
-lime
 xgboost
-flask-cors
