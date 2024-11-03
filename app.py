@@ -2,25 +2,42 @@ import os
 import logging
 import gc
 import string
-import nltk
 import numpy as np
+import pickle
 from sklearn.decomposition import PCA
 from sklearn.ensemble import StackingClassifier
 from sklearn.linear_model import LogisticRegression
 from xgboost import XGBClassifier
 from sklearn.feature_extraction.text import TfidfVectorizer
-from nltk.corpus import stopwords
 from flask import Flask, request, jsonify, render_template
 
-# Set up logging
-logging.basicConfig(level=logging.DEBUG)
+# Set up logging (set to WARNING to reduce verbosity in production)
+logging.basicConfig(level=logging.WARNING)
 
-# Ensure required NLTK data is downloaded
-nltk.download('stopwords')
-stop_words = set(stopwords.words('english'))
+# Hardcoded stop words instead of NLTK stopwords
+stop_words = {'a', 'the', 'is', 'in', 'it', 'to', 'and', 'of', 'on', 'for', 'with', 'as', 'by', 'an', 'at', 'or', 'that', 'this', 'which', 'be'}
 
 # Initialize Flask app
 app = Flask(__name__)
+
+# Global variables for model components
+tfidf_vectorizer, pca, stacking_model = None, None, None
+
+# Lazy loading of model components
+def load_model_components():
+    global tfidf_vectorizer, pca, stacking_model
+    if tfidf_vectorizer is None or pca is None or stacking_model is None:
+        try:
+            with open('tfidf_vectorizer.pkl', 'rb') as f:
+                tfidf_vectorizer = pickle.load(f)
+            with open('pca.pkl', 'rb') as f:
+                pca = pickle.load(f)
+            with open('stacking_model.pkl', 'rb') as f:
+                stacking_model = pickle.load(f)
+            logging.info("Model components loaded successfully.")
+        except Exception as e:
+            logging.error(f"Error loading model components: {e}")
+            raise RuntimeError("Model components could not be loaded.")
 
 # Tokenizer function
 def basic_tokenize(text):
@@ -37,13 +54,11 @@ def preprocess_text(text):
 # Function to predict a review
 def predict_review(review):
     try:
+        load_model_components()  # Load model components only when needed
+
         logging.debug(f"Received review for prediction: {review}")
         cleaned_review = preprocess_text(review)
         logging.debug(f"Cleaned review: {cleaned_review}")
-
-        # Ensure all model components are loaded
-        if not all([tfidf_vectorizer, pca, stacking_model]):
-            raise RuntimeError("Model components (TF-IDF, PCA, or classifier) are not properly loaded.")
 
         # Generate TF-IDF features and PCA-reduced features
         tfidf_features = tfidf_vectorizer.transform([cleaned_review])
