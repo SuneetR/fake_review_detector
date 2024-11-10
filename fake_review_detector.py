@@ -1,116 +1,64 @@
 import os
-import logging
-import gc
-import string
-import nltk
-import numpy as np
 import pickle
+import pandas as pd
+import string
+from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.decomposition import PCA
 from sklearn.ensemble import StackingClassifier
 from sklearn.linear_model import LogisticRegression
 from xgboost import XGBClassifier
-from sklearn.feature_extraction.text import TfidfVectorizer
-from flask import Flask, request, jsonify, render_template
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
 
-# Set up logging (set to WARNING to reduce verbosity in production)
-logging.basicConfig(level=logging.WARNING)
-
-# Hardcoded stop words instead of NLTK stopwords
+# Set up stop words
 stop_words = {'a', 'the', 'is', 'in', 'it', 'to', 'and', 'of', 'on', 'for', 'with', 'as', 'by', 'an', 'at', 'or', 'that', 'this', 'which', 'be'}
-
-# Initialize Flask app
-app = Flask(__name__)
-
-# Global variables for model components
-tfidf_vectorizer, pca, stacking_model = None, None, None
-
-# Load model components on demand
-def load_model_components():
-    global tfidf_vectorizer, pca, stacking_model
-    if tfidf_vectorizer is None or pca is None or stacking_model is None:
-        try:
-            with open('tfidf_vectorizer.pkl', 'rb') as f:
-                tfidf_vectorizer = pickle.load(f)
-            with open('pca.pkl', 'rb') as f:
-                pca = pickle.load(f)
-            with open('stacking_model.pkl', 'rb') as f:
-                stacking_model = pickle.load(f)
-            logging.info("Model components loaded successfully.")
-        except Exception as e:
-            logging.error(f"Error loading model components: {e}")
-            raise RuntimeError("Model components could not be loaded.")
-
-# Tokenizer function
-def basic_tokenize(text):
-    tokens = text.lower().split()
-    tokens = [word.strip(string.punctuation) for word in tokens]
-    return tokens
 
 # Preprocessing function
 def preprocess_text(text):
-    tokens = basic_tokenize(text)
-    cleaned_tokens = [word for word in tokens if word not in stop_words]
-    return ' '.join(cleaned_tokens)
+    tokens = text.lower().split()
+    tokens = [word.strip(string.punctuation) for word in tokens if word not in stop_words]
+    return ' '.join(tokens)
 
-# Function to predict a review
-def predict_review(review):
-    try:
-        load_model_components()  # Load model components only when needed
+# Load and preprocess dataset
+def load_data(file_path='reviews.csv'):
+    df = pd.read_csv(file_path)
+    df['review'] = df['review'].apply(preprocess_text)  # Preprocess the review text
+    return df['review'], df['label']
 
-        logging.debug(f"Received review for prediction: {review}")
-        cleaned_review = preprocess_text(review)
-        logging.debug(f"Cleaned review: {cleaned_review}")
+# Train the model and save components
+def train_and_save_model():
+    # Load the data
+    X, y = load_data()
 
-        # Generate TF-IDF features and PCA-reduced features
-        tfidf_features = tfidf_vectorizer.transform([cleaned_review])
-        tfidf_features_pca = pca.transform(tfidf_features.toarray())
+    # Vectorize text using TF-IDF
+    tfidf_vectorizer = TfidfVectorizer(max_features=1000)
+    X_tfidf = tfidf_vectorizer.fit_transform(X)
 
-        # Predict using the stacking model
-        probabilities = stacking_model.predict_proba(tfidf_features_pca)[0]
-        prob_genuine = probabilities[0]
-        prob_fake = probabilities[1]
+    # Reduce dimensionality with PCA
+    pca = PCA(n_components=100)
+    X_pca = pca.fit_transform(X_tfidf.toarray())
 
-        # Determine prediction and confidence
-        prediction = "Fake" if prob_fake > prob_genuine else "Genuine"
-        confidence = round(max(prob_genuine, prob_fake) * 100, 2)
+    # Define and train the model
+    base_estimators = [('xgb', XGBClassifier(use_label_encoder=False, eval_metric='logloss'))]
+    stacking_model = StackingClassifier(estimators=base_estimators, final_estimator=LogisticRegression())
+    stacking_model.fit(X_pca, y)
 
-        logging.debug(f"Prediction: {prediction}, Confidence: {confidence}")
-        return prediction, confidence
-    except Exception as e:
-        logging.error(f"Error during prediction: {e}")
-        raise
+    # Evaluate the model
+    X_train, X_test, y_train, y_test = train_test_split(X_pca, y, test_size=0.2, random_state=42)
+    stacking_model.fit(X_train, y_train)
+    y_pred = stacking_model.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred)
+    print(f"Model accuracy: {accuracy * 100:.2f}%")
 
-# Route for Home Page (Serve index.html)
-@app.route('/')
-def home():
-    return render_template('index.html')
+    # Save the vectorizer, PCA, and model to disk
+    with open('tfidf_vectorizer.pkl', 'wb') as f:
+        pickle.dump(tfidf_vectorizer, f)
+    with open('pca.pkl', 'wb') as f:
+        pickle.dump(pca, f)
+    with open('stacking_model.pkl', 'wb') as f:
+        pickle.dump(stacking_model, f)
 
-# API route for analyzing review sentiment
-@app.route('/analyze', methods=['POST'])
-def analyze():
-    try:
-        # Parse the input data
-        data = request.get_json()
-        review = data.get('review', '')
-        if not review:
-            logging.error("No review provided.")
-            return jsonify({'error': 'No review provided'}), 400
+    print("Model components saved successfully.")
 
-        # Make the prediction
-        prediction, confidence = predict_review(review)
-        gc.collect()
-
-        # Return the result as JSON
-        return jsonify({
-            'prediction': prediction,
-            'confidence': confidence
-        })
-    except Exception as e:
-        logging.error(f"Error in /analyze route: {e}")
-        return jsonify({'error': str(e)}), 500
-
-# Start the Flask application
 if __name__ == "__main__":
-    # Start the Flask app on a dynamic port
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port)
+    train_and_save_model()
