@@ -1,5 +1,4 @@
 import os
-import pickle
 import pandas as pd
 import string
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -25,11 +24,8 @@ def load_data(file_path='reviews.csv'):
     df['review'] = df['review'].apply(preprocess_text)  # Preprocess the review text
     return df['review'], df['label']
 
-# Train the model and save components
-def train_and_save_model():
-    # Load the data
-    X, y = load_data()
-
+# Train the model
+def train_model(X, y):
     # Vectorize text using TF-IDF
     tfidf_vectorizer = TfidfVectorizer(max_features=1000)
     X_tfidf = tfidf_vectorizer.fit_transform(X)
@@ -43,22 +39,27 @@ def train_and_save_model():
     stacking_model = StackingClassifier(estimators=base_estimators, final_estimator=LogisticRegression())
     stacking_model.fit(X_pca, y)
 
-    # Evaluate the model
-    X_train, X_test, y_train, y_test = train_test_split(X_pca, y, test_size=0.2, random_state=42)
-    stacking_model.fit(X_train, y_train)
-    y_pred = stacking_model.predict(X_test)
-    accuracy = accuracy_score(y_test, y_pred)
-    print(f"Model accuracy: {accuracy * 100:.2f}%")
+    return tfidf_vectorizer, pca, stacking_model
 
-    # Save the vectorizer, PCA, and model to disk
-    with open('tfidf_vectorizer.pkl', 'wb') as f:
-        pickle.dump(tfidf_vectorizer, f)
-    with open('pca.pkl', 'wb') as f:
-        pickle.dump(pca, f)
-    with open('stacking_model.pkl', 'wb') as f:
-        pickle.dump(stacking_model, f)
+# Predict function
+def predict(review, tfidf_vectorizer, pca, model):
+    # Preprocess and vectorize input review
+    review_processed = preprocess_text(review)
+    review_vectorized = tfidf_vectorizer.transform([review_processed])
+    review_pca = pca.transform(review_vectorized.toarray())
 
-    print("Model components saved successfully.")
+    # Get prediction and confidence
+    prediction = model.predict(review_pca)[0]
+    confidence = max(model.predict_proba(review_pca)[0]) * 100
+    return prediction, confidence
 
 if __name__ == "__main__":
-    train_and_save_model()
+    # Load and train the model
+    X, y = load_data()
+    tfidf_vectorizer, pca, model = train_model(X, y)
+    
+    # Evaluate the model
+    X_train, X_test, y_train, y_test = train_test_split(tfidf_vectorizer.transform(X).toarray(), y, test_size=0.2, random_state=42)
+    y_pred = model.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred)
+    print(f"Model accuracy: {accuracy * 100:.2f}%")
