@@ -1,7 +1,8 @@
 import os
-import pickle
 import logging
+import string
 from flask import Flask, request, jsonify, render_template
+from fake_review_detector import preprocess_text, train_model, load_data
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -9,27 +10,14 @@ app = Flask(__name__)
 # Set up logging (set to WARNING to reduce verbosity in production)
 logging.basicConfig(level=logging.WARNING)
 
-# Load model components
-def load_model_components():
-    try:
-        with open('tfidf_vectorizer.pkl', 'rb') as f:
-            tfidf_vectorizer = pickle.load(f)
-        with open('pca.pkl', 'rb') as f:
-            pca = pickle.load(f)
-        with open('stacking_model.pkl', 'rb') as f:
-            stacking_model = pickle.load(f)
-        return tfidf_vectorizer, pca, stacking_model
-    except Exception as e:
-        logging.error(f"Error loading model components: {e}")
-        raise RuntimeError("Model components could not be loaded.")
+# Load and train the model on startup
+X, y = load_data()  # Load data from the CSV file
+tfidf_vectorizer, pca, stacking_model = train_model(X, y)  # Train the model
 
 # Predict function
 def predict_review(review, tfidf_vectorizer, pca, stacking_model):
     # Preprocess the review
-    review = review.lower()
-    tokens = review.split()
-    tokens = [word.strip(string.punctuation) for word in tokens if word not in stop_words]
-    cleaned_review = ' '.join(tokens)
+    cleaned_review = preprocess_text(review)
 
     # Vectorize and apply PCA transformation
     tfidf_features = tfidf_vectorizer.transform([cleaned_review])
@@ -44,9 +32,6 @@ def predict_review(review, tfidf_vectorizer, pca, stacking_model):
     confidence = round(max(prob_genuine, prob_fake) * 100, 2)
 
     return prediction, confidence
-
-# Load components on startup
-tfidf_vectorizer, pca, stacking_model = load_model_components()
 
 # Route for the home page
 @app.route('/')
