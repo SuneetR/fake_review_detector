@@ -1,54 +1,78 @@
-import pandas as pd
-from sklearn.model_selection import train_test_split
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.decomposition import PCA
-from sklearn.ensemble import StackingClassifier
-from sklearn.linear_model import LogisticRegression
-from sklearn.naive_bayes import MultinomialNB
-from sklearn.svm import SVC
-from sklearn.pipeline import Pipeline
+# fake_review_detector.py
+
 import string
+import nltk
+from sklearn.pipeline import make_pipeline
+from sklearn.linear_model import LogisticRegression
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.model_selection import train_test_split
+import pandas as pd
+import numpy as np
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
 
-# Define stop words and preprocessing function
-stop_words = {'a', 'the', 'is', 'in', 'it', 'to', 'and', 'of', 'on', 'for', 'with', 'as', 'by', 'an', 'at', 'or', 'that', 'this', 'which', 'be'}
+# Download necessary NLTK resources
+nltk.download('stopwords')
+nltk.download('wordnet')
 
+# Initialize NLTK components
+stop_words = set(stopwords.words('english'))
+lemmatizer = WordNetLemmatizer()
+
+# Load and preprocess the data from CSV
+def load_and_preprocess_data(file_path='reviews.csv'):
+    try:
+        df = pd.read_csv(file_path)
+    except FileNotFoundError:
+        raise Exception("The file 'reviews.csv' was not found. Please make sure it's in the correct directory.")
+    
+    # Ensure no missing values in 'label' column and preprocess text
+    df.dropna(subset=['label'], inplace=True)
+    df['review'] = df['review'].apply(preprocess_text)
+    
+    # Ensure 'label' is numeric (1 for true, 0 for fake)
+    df['label'] = df['label'].astype(int)
+    
+    return df
+
+# Preprocess function
 def preprocess_text(text):
-    tokens = text.lower().split()
-    tokens = [word.strip(string.punctuation) for word in tokens if word not in stop_words]
-    return ' '.join(tokens)
+    text = text.lower()  # Lowercase text
+    text = ''.join([char for char in text if char not in string.punctuation])  # Remove punctuation
+    text = ' '.join([lemmatizer.lemmatize(word) for word in text.split() if word not in stop_words])  # Remove stopwords and lemmatize
+    return text
 
-def load_data():
-    # Load and preprocess data
-    data = pd.read_csv('reviews.csv')
-    data['review'] = data['review'].apply(preprocess_text)
-    X = data['review']
-    y = data['label']
-    return train_test_split(X, y, test_size=0.2, random_state=42)
+# Load and split data
+df = load_and_preprocess_data()
+X = df['review']
+y = df['label']
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-def train_model(X_train, y_train):
-    # Initialize components
-    tfidf_vectorizer = TfidfVectorizer()
-    pca = PCA(n_components=50)  # Adjust as needed
-    base_models = [
-        ('nb', MultinomialNB()),
-        ('svc', SVC(probability=True))
-    ]
-    stacking_model = StackingClassifier(
-        estimators=base_models,
-        final_estimator=LogisticRegression()
-    )
+# Create the model pipeline
+pipeline = make_pipeline(
+    TfidfVectorizer(),
+    LogisticRegression(solver='liblinear', C=1.0, random_state=42)
+)
 
-    # Create a pipeline
-    pipeline = Pipeline([
-        ('tfidf', tfidf_vectorizer),
-        ('pca', pca),
-        ('stacking', stacking_model)
-    ])
+# Train the initial model
+pipeline.fit(X_train, y_train)
 
-    # Fit model
+# Predict function for new reviews
+def predict_review(review):
+    preprocessed_review = preprocess_text(review)
+    prediction = pipeline.predict([preprocessed_review])[0]
+    confidence = pipeline.predict_proba([preprocessed_review])[0].max() * 100
+    result = 'True' if prediction == 1 else 'Fake'
+    return result, f"{confidence:.2f}%"
+
+# Function to update the model with a new review and label
+def update_model(new_review, new_label):
+    global X_train, y_train
+    preprocessed_review = preprocess_text(new_review)
+    
+    # Append new data to the training set
+    X_train = pd.concat([X_train, pd.Series(preprocessed_review)], ignore_index=True)
+    y_train = pd.concat([y_train, pd.Series(new_label)], ignore_index=True)
+    
+    # Retrain the model on the updated dataset
     pipeline.fit(X_train, y_train)
-    return pipeline
-
-# Prepare data and train model on script execution
-X_train, X_test, y_train, y_test = load_data()
-model_pipeline = train_model(X_train, y_train)
