@@ -2,10 +2,13 @@
 
 import string
 import nltk
-from sklearn.pipeline import make_pipeline
+from sklearn.pipeline import Pipeline
 from sklearn.linear_model import LogisticRegression
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split
+from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.preprocessing import FunctionTransformer
+from sklearn.compose import ColumnTransformer
 import pandas as pd
 import numpy as np
 from nltk.corpus import stopwords
@@ -35,44 +38,69 @@ def load_and_preprocess_data(file_path='reviews.csv'):
     
     return df
 
-# Preprocess function
+# Custom preprocessing function for text data
 def preprocess_text(text):
-    text = text.lower()  # Lowercase text
-    text = ''.join([char for char in text if char not in string.punctuation])  # Remove punctuation
-    text = ' '.join([lemmatizer.lemmatize(word) for word in text.split() if word not in stop_words])  # Remove stopwords and lemmatize
+    text = text.lower()
+    text = ''.join([char for char in text if char not in string.punctuation])
+    text = ' '.join([lemmatizer.lemmatize(word) for word in text.split() if word not in stop_words])
     return text
 
-# Load and split data
+# Custom transformer to calculate review length and adjective count
+class LengthAndAdjectiveTransformer(BaseEstimator, TransformerMixin):
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X, y=None):
+        features = pd.DataFrame()
+        
+        # Length of the review
+        features['review_length'] = X['review'].apply(lambda x: len(x.split()))
+        
+        # Adjective count
+        features['adjective_count'] = X['review'].apply(lambda x: sum(1 for word in x.split() if word.endswith('y')))
+        
+        return features
+
+# Load data and split into train/test
 df = load_and_preprocess_data()
-X = df['review']
+X = df[['review']]
 y = df['label']
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Create the model pipeline
-pipeline = make_pipeline(
-    TfidfVectorizer(),
-    LogisticRegression(solver='liblinear', C=1.0, random_state=42)
+# Create a column transformer with both text vectorization and custom features
+preprocessor = ColumnTransformer(
+    transformers=[
+        ('text', TfidfVectorizer(ngram_range=(1, 2), max_df=0.9, min_df=5), 'review'),
+        ('custom_features', LengthAndAdjectiveTransformer(), ['review'])
+    ]
 )
 
-# Train the initial model
+# Pipeline with feature extraction and model
+pipeline = Pipeline([
+    ('preprocessor', preprocessor),
+    ('classifier', LogisticRegression(solver='liblinear', C=1.0, random_state=42))
+])
+
+# Train the model
 pipeline.fit(X_train, y_train)
 
-# Predict function for new reviews
+# Prediction function
 def predict_review(review):
-    preprocessed_review = preprocess_text(review)
-    prediction = pipeline.predict([preprocessed_review])[0]
-    confidence = pipeline.predict_proba([preprocessed_review])[0].max() * 100
+    # Convert to DataFrame for compatibility with ColumnTransformer
+    X_input = pd.DataFrame({'review': [preprocess_text(review)]})
+    prediction = pipeline.predict(X_input)[0]
+    confidence = pipeline.predict_proba(X_input)[0].max() * 100
     result = 'True' if prediction == 1 else 'Fake'
     return result, f"{confidence:.2f}%"
 
-# Function to update the model with a new review and label
+# Function to update the model with new data
 def update_model(new_review, new_label):
     global X_train, y_train
-    preprocessed_review = preprocess_text(new_review)
     
-    # Append new data to the training set
-    X_train = pd.concat([X_train, pd.Series(preprocessed_review)], ignore_index=True)
-    y_train = pd.concat([y_train, pd.Series(new_label)], ignore_index=True)
+    # Preprocess and append new data to training set
+    new_review_processed = preprocess_text(new_review)
+    X_train = pd.concat([X_train, pd.DataFrame({'review': [new_review_processed]})], ignore_index=True)
+    y_train = pd.concat([y_train, pd.Series([new_label])], ignore_index=True)
     
-    # Retrain the model on the updated dataset
+    # Retrain the model with updated data
     pipeline.fit(X_train, y_train)
