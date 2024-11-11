@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, redirect, url_for
+from flask import Flask, request, render_template, redirect, url_for, jsonify
 from fake_review_detector import predict_review, update_model
 import os
 
@@ -25,10 +25,17 @@ def home():
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    """Handle prediction requests."""
-    review = request.form['review']
-    result, confidence = predict_review(review)
-    return render_template('index.html', prediction=result, confidence=confidence)
+    """Handle prediction requests for the review analysis."""
+    data = request.get_json()
+    review = data.get('review', '')
+    
+    # Check if review text is provided
+    if not review:
+        return jsonify({'error': 'Review text is missing'}), 400
+    
+    # Get prediction and confidence from the model
+    prediction, confidence = predict_review(review)
+    return jsonify({'prediction': prediction, 'confidence': confidence})
 
 @app.route('/submit_feedback', methods=['POST'])
 def submit_feedback():
