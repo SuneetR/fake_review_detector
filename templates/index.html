@@ -900,17 +900,18 @@ button:hover {
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
 
 <script>
+   // Function to analyze the review text
    function analyzeReview() {
       const review = document.getElementById('review-input').value;
 
-      // Check if the review input is not empty
+      // Check if the review input is empty
       if (review === "") {
          alert("Please provide a review.");
          return;
       }
 
       // Make an AJAX request to the Flask server
-      fetch('/analyze', {
+      fetch('/predict', {
          method: 'POST',
          headers: {
             'Content-Type': 'application/json',
@@ -927,13 +928,13 @@ button:hover {
       .then(data => {
          // Show the AI result and display the prediction and confidence
          document.getElementById('ai-result').classList.remove('hidden');
-         document.getElementById('result-text').textContent = `Prediction: ${data.prediction === 1 ? 'Real' : 'Fake'}`;
-         document.getElementById('confidence-text').textContent = `Confidence: ${data.confidence.toFixed(2)}%`;
+         document.getElementById('result-text').textContent = `Prediction: ${data.prediction}`;
+         document.getElementById('confidence-text').textContent = `Confidence: ${data.confidence}`;
 
          // Update confidence bar
          const confidenceBar = document.getElementById('confidence-bar');
          confidenceBar.style.width = `${data.confidence}%`;
-         confidenceBar.textContent = `${data.confidence.toFixed(2)}%`;
+         confidenceBar.textContent = `${data.confidence}%`;
       })
       .catch(error => {
          console.error('Error:', error);
@@ -941,6 +942,7 @@ button:hover {
       });
    }
 
+   // Navbar scrolling effect
    window.addEventListener('scroll', function () {
       const navbar = document.querySelector('.navbar');
       if (window.scrollY > 50) {
@@ -950,12 +952,14 @@ button:hover {
       }
    });
 
+   // Hero animation end event listener
    document.querySelector('.drop').addEventListener('animationend', function() {
       const heroContent = document.querySelector('.hero-content');
       heroContent.style.opacity = '1';
       heroContent.style.transform = 'translateY(0)';
    });
 
+   // Scroll fade-in effect for sections
    window.addEventListener('scroll', () => {
       const sections = document.querySelectorAll('section');
       const scrollY = window.pageYOffset;
@@ -968,7 +972,7 @@ button:hover {
       });
    });
 
-   // Typed Text Animation for headings/results
+   // Typed text animation for the hero heading
    function typeText() {
       const typedText = document.getElementById('typed-heading');
       const text = "Analyze a Review in Real Time!";
@@ -983,10 +987,10 @@ button:hover {
       typingEffect();
    }
 
-   // Ensure the typed text animation starts when the page loads
+   // Start typed text animation when the page loads
    window.onload = typeText;
 
-   // Confetti Effect Function
+   // Confetti effect function
    function triggerConfetti() {
       confetti({
          particleCount: 100,
@@ -995,45 +999,37 @@ button:hover {
       });
    }
 
-   // Object to track keys that are pressed
+   // Easter egg: Control+Shift+E key combination
    let keysPressed = {};
 
-   // Keydown event listener
    document.addEventListener('keydown', (event) => {
-      // Convert keys to lowercase to avoid case-sensitivity issues
       keysPressed[event.key.toLowerCase()] = true;
-
-      // Check if Control, Shift, and 'e' are pressed
       if (keysPressed['control'] && keysPressed['shift'] && keysPressed['e']) {
          alert('Easter Egg Activated!');
          triggerConfetti();  // Trigger confetti effect
       }
    });
 
-   // Keyup event listener to remove the key from the object when it is released
    document.addEventListener('keyup', (event) => {
       delete keysPressed[event.key.toLowerCase()];
    });
 
+   // Team member details modal
    document.addEventListener("DOMContentLoaded", function () {
       const members = document.querySelectorAll(".team-member");
       const detailsSection = document.getElementById("member-details");
       const detailsContent = document.querySelector(".details-content");
       const teamContent = document.querySelector(".team-content");
 
-      // Add event listeners to each team member to open the details modal
       members.forEach(member => {
          member.addEventListener("click", function () {
             const memberId = this.getAttribute('data-member-id');
             showDetails(memberId);
-
-            // Apply blur effect to team content and show modal
             teamContent.classList.add("blur");
             detailsSection.classList.add("show");
          });
       });
 
-      // Function to show the team member details
       function showDetails(memberId) {
          let content = '';
          switch (memberId) {
@@ -1069,26 +1065,25 @@ button:hover {
                content = `<p>Member not found.</p>`;
                break;
          }
-
-         // Insert the generated content into the modal's content area
          detailsContent.innerHTML = content;
       }
 
-      // Function to close the details modal and remove the blur effect
       window.closeDetails = function() {
          detailsSection.classList.remove("show");
          teamContent.classList.remove("blur");
       };
    });
 
+   // Hero section animation delay
    document.addEventListener('DOMContentLoaded', function () {
       const heroContent = document.querySelector('.hero-content');
       setTimeout(() => {
          heroContent.style.opacity = '1';
          heroContent.style.transform = 'translateY(0)';
-      }, 2000); // Matches the delay in the CSS
+      }, 2000);
    });
 </script>
+
 
 
 </body>
