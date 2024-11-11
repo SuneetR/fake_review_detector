@@ -43,7 +43,7 @@ def submit_feedback():
     feedback = request.form['feedback']
     store_feedback(feedback)
     print(f"Received feedback: {feedback}")
-    return redirect(url_for('home'))
+    return jsonify({'status': 'success', 'message': 'Feedback received'})
 
 @app.route('/submit_review', methods=['POST'])
 def submit_review():
@@ -53,11 +53,11 @@ def submit_review():
     store_review(review, review_type)
     
     # Update the model with the new review and its label
-    new_label = 1 if review_type.lower() == 'true' else 0
+    new_label = 1 if review_type.strip().lower() == 'true' else 0
     update_model(review, new_label)
     print(f"Received review: {review}, Type: {review_type}, Model Updated")
     
-    return redirect(url_for('home'))
+    return jsonify({'status': 'success', 'message': 'Review received and model updated'})
 
 if __name__ == '__main__':
     # Ensure feedback and reviews files exist or create them
