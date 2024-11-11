@@ -910,6 +910,37 @@ button:hover {
          return;
       }
 
+      // Make an AJAX request to the Flask server
+      fetch('/predict', {
+         method: 'POST',
+         headers: {
+            'Content-Type': 'application/json',
+         },
+         body: JSON.stringify({ review: review }),
+      })
+      .then(response => {
+         // Check if the response status is OK (status 200)
+         if (!response.ok) {
+            throw new Error(`Server error: ${response.statusText}`);
+         }
+         return response.json();
+      })
+      .then(data => {
+         // Show the AI result and display the prediction and confidence
+         document.getElementById('ai-result').classList.remove('hidden');
+         document.getElementById('result-text').textContent = `Prediction: ${data.prediction}`;
+         document.getElementById('confidence-text').textContent = `Confidence: ${data.confidence}`;
+
+         // Update confidence bar
+         const confidenceBar = document.getElementById('confidence-bar');
+         confidenceBar.style.width = `${data.confidence}%`;
+         confidenceBar.textContent = `${data.confidence}%`;
+      })
+      .catch(error => {
+         console.error('Error:', error);
+         alert(`An error occurred: ${error.message}`);
+      });
+   }
 
    // Navbar scrolling effect
    window.addEventListener('scroll', function () {
