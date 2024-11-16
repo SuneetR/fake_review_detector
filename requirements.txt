@@ -5,4 +5,9 @@ pandas
 numpy
 nltk
 xgboost
-textblob  # for sentiment analysis in the review
+textblob  
+transformers
+torch
+sklearn
+
+
