@@ -8,6 +8,5 @@ xgboost
 textblob  
 transformers
 torch
-sklearn
 
 
