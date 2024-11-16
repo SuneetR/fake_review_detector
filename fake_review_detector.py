@@ -1,26 +1,22 @@
-# fake_review_detector.py
-
 import string
 import nltk
 from sklearn.pipeline import Pipeline
-from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split
 from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.preprocessing import FunctionTransformer
 from sklearn.compose import ColumnTransformer
+from textblob import TextBlob
 import pandas as pd
 import numpy as np
-from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
 
 # Download necessary NLTK resources
 nltk.download('stopwords')
 nltk.download('wordnet')
 
 # Initialize NLTK components
-stop_words = set(stopwords.words('english'))
-lemmatizer = WordNetLemmatizer()
+stop_words = set(nltk.corpus.stopwords.words('english'))
+lemmatizer = nltk.WordNetLemmatizer()
 
 # Load and preprocess the data from CSV
 def load_and_preprocess_data(file_path='reviews.csv'):
@@ -45,8 +41,8 @@ def preprocess_text(text):
     text = ' '.join([lemmatizer.lemmatize(word) for word in text.split() if word not in stop_words])
     return text
 
-# Custom transformer to calculate review length and adjective count
-class LengthAndAdjectiveTransformer(BaseEstimator, TransformerMixin):
+# Feature transformer for advanced features
+class EnhancedFeatureTransformer(BaseEstimator, TransformerMixin):
     def fit(self, X, y=None):
         return self
 
@@ -56,10 +52,23 @@ class LengthAndAdjectiveTransformer(BaseEstimator, TransformerMixin):
         # Length of the review
         features['review_length'] = X['review'].apply(lambda x: len(x.split()))
         
-        # Adjective count
-        features['adjective_count'] = X['review'].apply(lambda x: sum(1 for word in x.split() if word.endswith('y')))
+        # Lexical diversity
+        features['lexical_diversity'] = X['review'].apply(lambda x: len(set(x.split())) / len(x.split()) if len(x.split()) > 0 else 0)
+        
+        # Average word length
+        features['avg_word_length'] = X['review'].apply(lambda x: np.mean([len(word) for word in x.split()]) if len(x.split()) > 0 else 0)
+        
+        # Sentiment analysis
+        features['sentiment_polarity'], features['sentiment_subjectivity'] = zip(
+            *X['review'].apply(lambda x: extract_sentiment_features(x))
+        )
         
         return features
+
+# Function to extract sentiment features
+def extract_sentiment_features(text):
+    analysis = TextBlob(text)
+    return analysis.sentiment.polarity, analysis.sentiment.subjectivity
 
 # Load data and split into train/test
 df = load_and_preprocess_data()
@@ -71,25 +80,26 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 preprocessor = ColumnTransformer(
     transformers=[
         ('text', TfidfVectorizer(ngram_range=(1, 2), max_df=0.9, min_df=5), 'review'),
-        ('custom_features', LengthAndAdjectiveTransformer(), ['review'])
+        ('custom_features', EnhancedFeatureTransformer(), ['review'])
     ]
 )
 
 # Pipeline with feature extraction and model
 pipeline = Pipeline([
     ('preprocessor', preprocessor),
-    ('classifier', LogisticRegression(solver='liblinear', C=1.0, random_state=42))
+    ('classifier', RandomForestClassifier(n_estimators=100, random_state=42))
 ])
 
 # Train the model
 pipeline.fit(X_train, y_train)
 
 # Prediction function
-def predict_review(review):
+def predict_review(review, threshold=0.7):
     # Convert to DataFrame for compatibility with ColumnTransformer
     X_input = pd.DataFrame({'review': [preprocess_text(review)]})
-    prediction = pipeline.predict(X_input)[0]
-    confidence = pipeline.predict_proba(X_input)[0].max() * 100
+    proba = pipeline.predict_proba(X_input)[0]
+    prediction = 1 if proba[1] > threshold else 0
+    confidence = proba.max() * 100
     result = 'True' if prediction == 1 else 'Fake'
     return result, f"{confidence:.2f}%"
 
