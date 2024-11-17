@@ -11,12 +11,12 @@ import pandas as pd
 import numpy as np
 import gc
 
-# Load pretrained lightweight model
-tokenizer = AutoTokenizer.from_pretrained("distilbert-base-uncased")
-bert_model = AutoModel.from_pretrained("distilbert-base-uncased")
+# Load pretrained lightweight ALBERT v2 model
+tokenizer = AutoTokenizer.from_pretrained("albert-base-v2")
+albert_model = AutoModel.from_pretrained("albert-base-v2")
 
-# Custom Transformer using DistilBERT
-class DistilBERTFeatureExtractor(BaseEstimator, TransformerMixin):
+# Custom Transformer using ALBERT
+class ALBERTFeatureExtractor(BaseEstimator, TransformerMixin):
     def __init__(self, model, tokenizer, max_length=128):
         self.model = model
         self.tokenizer = tokenizer
@@ -65,7 +65,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 # Column Transformer
 preprocessor = ColumnTransformer(
     transformers=[
-        ('bert_features', DistilBERTFeatureExtractor(bert_model, tokenizer), ['review']),
+        ('albert_features', ALBERTFeatureExtractor(albert_model, tokenizer), ['review']),
         ('tfidf', TfidfVectorizer(max_features=500), 'review')  # Backup features
     ]
 )
