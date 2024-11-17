@@ -1044,8 +1044,8 @@ button:hover {
       }, 2000);
    });
 
-  function analyzeReview() {
-    const review = document.getElementById('review-input').value;
+ function analyzeReview() {
+    const review = document.getElementById('review-input').value.trim(); // Trim to avoid whitespace-only inputs
 
     // Check if the review input is empty
     if (review === "") {
@@ -1063,26 +1063,38 @@ button:hover {
     })
     .then(response => {
         if (!response.ok) {
-            throw new Error(`Server error: ${response.statusText}`);
+            // Check for server errors
+            throw new Error(`Server error: ${response.status} - ${response.statusText}`);
         }
         return response.json();
     })
     .then(data => {
+        if (data.error) {
+            // If the server indicates the model isn't ready yet
+            if (data.error === 'Model is still loading') {
+                alert("The model is still loading. Please try again in a few moments.");
+            } else {
+                alert(`Error from server: ${data.error}`);
+            }
+            return;
+        }
+
         // Show the AI result and display the prediction and confidence
         document.getElementById('ai-result').classList.remove('hidden');
         document.getElementById('result-text').textContent = `Prediction: ${data.prediction}`;
-        document.getElementById('confidence-text').textContent = `Confidence: ${data.confidence}`;
+        document.getElementById('confidence-text').textContent = `Confidence: ${(data.confidence * 100).toFixed(2)}%`;
 
         // Update confidence bar
         const confidenceBar = document.getElementById('confidence-bar');
-        confidenceBar.style.width = `${data.confidence}`;
-        confidenceBar.textContent = `${data.confidence}`;
+        confidenceBar.style.width = `${(data.confidence * 100).toFixed(2)}%`;
+        confidenceBar.textContent = `${(data.confidence * 100).toFixed(2)}%`;
     })
     .catch(error => {
         console.error('Error:', error);
         alert(`An error occurred: ${error.message}`);
     });
 }
+
 
 </script>
 
