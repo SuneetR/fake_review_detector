@@ -1,122 +1,89 @@
 import string
-import nltk
+import torch
+from transformers import AutoTokenizer, AutoModel, AutoModelForSequenceClassification
 from sklearn.pipeline import Pipeline
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.model_selection import train_test_split
-from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.compose import ColumnTransformer
-from transformers import AutoTokenizer, AutoModelForSequenceClassification, TextClassificationPipeline
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.model_selection import train_test_split
 import pandas as pd
 import numpy as np
-import onnxruntime as ort
+import gc
 
-# Download necessary NLTK resources
-nltk.download('stopwords')
-nltk.download('wordnet')
+# Load pretrained lightweight model
+tokenizer = AutoTokenizer.from_pretrained("distilbert-base-uncased")
+bert_model = AutoModel.from_pretrained("distilbert-base-uncased")
 
-# Initialize NLTK components
-stop_words = set(nltk.corpus.stopwords.words('english'))
-lemmatizer = nltk.WordNetLemmatizer()
-
-# Load and preprocess the data from CSV
-def load_and_preprocess_data(file_path='reviews.csv'):
-    try:
-        df = pd.read_csv(file_path)
-    except FileNotFoundError:
-        raise Exception("The file 'reviews.csv' was not found. Please make sure it's in the correct directory.")
+# Custom Transformer using DistilBERT
+class DistilBERTFeatureExtractor(BaseEstimator, TransformerMixin):
+    def __init__(self, model, tokenizer, max_length=128):
+        self.model = model
+        self.tokenizer = tokenizer
+        self.max_length = max_length
     
-    # Ensure no missing values in 'label' column and preprocess text
-    df.dropna(subset=['label'], inplace=True)
-    df['review'] = df['review'].apply(preprocess_text)
+    def fit(self, X, y=None):
+        return self
     
-    # Ensure 'label' is numeric (1 for true, 0 for fake)
-    df['label'] = df['label'].astype(int)
-    
-    return df
+    def transform(self, X, y=None):
+        features = []
+        for text in X['review']:
+            # Tokenize and truncate input text
+            inputs = self.tokenizer(text, max_length=self.max_length, padding='max_length', truncation=True, return_tensors="pt")
+            
+            # Disable gradient calculations for inference
+            with torch.no_grad():
+                outputs = self.model(**inputs)
+            
+            # Use pooled output ([CLS] token representation)
+            pooled_output = outputs.last_hidden_state[:, 0, :].numpy()
+            features.append(pooled_output.flatten())
+        
+        # Convert features to DataFrame
+        return pd.DataFrame(features)
 
-# Custom preprocessing function for text data
+# Preprocessing function
 def preprocess_text(text):
     text = text.lower()
     text = ''.join([char for char in text if char not in string.punctuation])
-    text = ' '.join([lemmatizer.lemmatize(word) for word in text.split() if word not in stop_words])
     return text
 
-# Load a lightweight transformer model
-tokenizer = AutoTokenizer.from_pretrained("distilbert-base-uncased")
-model = AutoModelForSequenceClassification.from_pretrained("distilbert-base-uncased", num_labels=2)
-sentiment_pipeline = TextClassificationPipeline(model=model, tokenizer=tokenizer, return_all_scores=True)
+# Load and preprocess data
+def load_data(file_path='reviews.csv'):
+    df = pd.read_csv(file_path)
+    df.dropna(subset=['label'], inplace=True)
+    df['review'] = df['review'].apply(preprocess_text)
+    df['label'] = df['label'].astype(int)
+    return df
 
-# Feature transformer for advanced features
-class EnhancedFeatureTransformer(BaseEstimator, TransformerMixin):
-    def fit(self, X, y=None):
-        return self
-
-    def transform(self, X, y=None):
-        features = pd.DataFrame()
-        
-        # Length of the review
-        features['review_length'] = X['review'].apply(lambda x: len(x.split()))
-        
-        # Lexical diversity
-        features['lexical_diversity'] = X['review'].apply(lambda x: len(set(x.split())) / len(x.split()) if len(x.split()) > 0 else 0)
-        
-        # Average word length
-        features['avg_word_length'] = X['review'].apply(lambda x: np.mean([len(word) for word in x.split()]) if len(x.split()) > 0 else 0)
-        
-        # Sentiment analysis using DistilBERT
-        sentiment_scores = X['review'].apply(self.get_sentiment_score)
-        features['sentiment_score_true'] = sentiment_scores.apply(lambda x: x[0]['score'])
-        features['sentiment_score_fake'] = sentiment_scores.apply(lambda x: x[1]['score'])
-        
-        return features
-
-    def get_sentiment_score(self, text):
-        # Use the DistilBERT model to analyze sentiment
-        result = sentiment_pipeline(text[:512])
-        return result
-
-# Load data and split into train/test
-df = load_and_preprocess_data()
+# Load dataset
+df = load_data()
 X = df[['review']]
 y = df['label']
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Create a column transformer with both text vectorization and custom features
+# Column Transformer
 preprocessor = ColumnTransformer(
     transformers=[
-        ('text', TfidfVectorizer(ngram_range=(1, 2), max_df=0.9, min_df=5), 'review'),
-        ('custom_features', EnhancedFeatureTransformer(), ['review'])
+        ('bert_features', DistilBERTFeatureExtractor(bert_model, tokenizer), ['review']),
+        ('tfidf', TfidfVectorizer(max_features=500), 'review')  # Backup features
     ]
 )
 
-# Pipeline with feature extraction and model
+# Pipeline
 pipeline = Pipeline([
     ('preprocessor', preprocessor),
-    ('classifier', RandomForestClassifier(n_estimators=200, random_state=42, max_depth=20))  # Increased depth
+    ('classifier', RandomForestClassifier(n_estimators=50, max_depth=10, random_state=42))  # Reduced complexity
 ])
 
-# Train the model
+# Fit Model
 pipeline.fit(X_train, y_train)
 
-# Prediction function
-def predict_review(review, threshold=0.7):
-    # Convert to DataFrame for compatibility with ColumnTransformer
-    X_input = pd.DataFrame({'review': [preprocess_text(review)]})
-    proba = pipeline.predict_proba(X_input)[0]
-    prediction = 1 if proba[1] > threshold else 0
-    confidence = proba.max() * 100
-    result = 'True' if prediction == 1 else 'Fake'
-    return result, f"{confidence:.2f}%"
+# Prediction
+def predict_review(review):
+    review_processed = pd.DataFrame({'review': [preprocess_text(review)]})
+    result = pipeline.predict(review_processed)
+    return "True" if result[0] == 1 else "Fake"
 
-# Function to update the model with new data
-def update_model(new_review, new_label):
-    global X_train, y_train
-    
-    # Preprocess and append new data to training set
-    new_review_processed = preprocess_text(new_review)
-    X_train = pd.concat([X_train, pd.DataFrame({'review': [new_review_processed]})], ignore_index=True)
-    y_train = pd.concat([y_train, pd.Series([new_label])], ignore_index=True)
-    
-    # Retrain the model with updated data
-    pipeline.fit(X_train, y_train)
+# Memory Cleanup
+gc.collect()
