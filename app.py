@@ -1,12 +1,32 @@
-from flask import Flask, request, render_template, redirect, url_for, jsonify
+from flask import Flask, request, render_template, jsonify
 from fake_review_detector import predict_review, update_model
+import threading
 import os
+import time
 
 app = Flask(__name__)
 
 # Paths for storing feedback and reviews
 FEEDBACK_FILE_PATH = 'feedback.txt'
 REVIEWS_FILE_PATH = 'reviews.txt'
+
+# Globals for model and its state
+model_loaded = False
+
+def load_model():
+    """Load the model in a separate thread."""
+    global model_loaded
+    try:
+        print("Initializing the model...")
+        time.sleep(5)  # Simulate a delay for loading the model
+        # Load your model here (if applicable, adjust to your implementation)
+        model_loaded = True
+        print("Model loaded successfully!")
+    except Exception as e:
+        print(f"Error loading model: {e}")
+
+# Start model loading in a background thread
+threading.Thread(target=load_model).start()
 
 def store_feedback(feedback):
     """Store feedback in a file."""
@@ -26,6 +46,9 @@ def home():
 @app.route('/predict', methods=['POST'])
 def predict():
     """Handle prediction requests for the review analysis."""
+    if not model_loaded:
+        return jsonify({'error': 'Model is still initializing. Please try again later.'}), 503
+
     data = request.get_json()
     review = data.get('review', '')
     
