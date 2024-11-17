@@ -6,9 +6,10 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.compose import ColumnTransformer
-from transformers import pipeline as hf_pipeline, AutoTokenizer, AutoModelForSequenceClassification
+from transformers import AutoTokenizer, AutoModelForSequenceClassification, TextClassificationPipeline
 import pandas as pd
 import numpy as np
+import onnxruntime as ort
 
 # Download necessary NLTK resources
 nltk.download('stopwords')
@@ -41,16 +42,13 @@ def preprocess_text(text):
     text = ' '.join([lemmatizer.lemmatize(word) for word in text.split() if word not in stop_words])
     return text
 
+# Load a lightweight transformer model
+tokenizer = AutoTokenizer.from_pretrained("distilbert-base-uncased")
+model = AutoModelForSequenceClassification.from_pretrained("distilbert-base-uncased", num_labels=2)
+sentiment_pipeline = TextClassificationPipeline(model=model, tokenizer=tokenizer, return_all_scores=True)
+
 # Feature transformer for advanced features
 class EnhancedFeatureTransformer(BaseEstimator, TransformerMixin):
-    def __init__(self):
-        # Load BERT model for sentiment analysis
-        self.sentiment_model = hf_pipeline(
-            "text-classification",
-            model=AutoModelForSequenceClassification.from_pretrained("nlptown/bert-base-multilingual-uncased-sentiment"),
-            tokenizer=AutoTokenizer.from_pretrained("nlptown/bert-base-multilingual-uncased-sentiment"),
-        )
-
     def fit(self, X, y=None):
         return self
 
@@ -66,17 +64,17 @@ class EnhancedFeatureTransformer(BaseEstimator, TransformerMixin):
         # Average word length
         features['avg_word_length'] = X['review'].apply(lambda x: np.mean([len(word) for word in x.split()]) if len(x.split()) > 0 else 0)
         
-        # Sentiment analysis using BERT
+        # Sentiment analysis using DistilBERT
         sentiment_scores = X['review'].apply(self.get_sentiment_score)
-        features['bert_sentiment'] = sentiment_scores.apply(lambda x: x['score'])
-        features['bert_sentiment_label'] = sentiment_scores.apply(lambda x: x['label'])
+        features['sentiment_score_true'] = sentiment_scores.apply(lambda x: x[0]['score'])
+        features['sentiment_score_fake'] = sentiment_scores.apply(lambda x: x[1]['score'])
         
         return features
 
     def get_sentiment_score(self, text):
-        # Use the BERT model to analyze sentiment
-        result = self.sentiment_model(text[:512])[0]  # Truncate to 512 tokens for BERT
-        return {"label": result['label'], "score": result['score']}
+        # Use the DistilBERT model to analyze sentiment
+        result = sentiment_pipeline(text[:512])
+        return result
 
 # Load data and split into train/test
 df = load_and_preprocess_data()
