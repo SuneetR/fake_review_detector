@@ -1,11 +1,4 @@
-Flask
-gunicorn
-scikit-learn
-pandas
 numpy
 nltk
 xgboost
-transformers
-torch
-
-
+textblob
