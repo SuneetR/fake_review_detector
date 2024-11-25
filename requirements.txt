@@ -4,4 +4,4 @@ xgboost
 textblob  
 transformers
 torch
-sklearn
+scikit-learn
