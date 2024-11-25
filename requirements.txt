@@ -1,4 +1,7 @@
 numpy
 nltk
 xgboost
-textblob
+textblob  
+transformers
+torch
+sklearn
