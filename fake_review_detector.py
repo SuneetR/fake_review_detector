@@ -6,7 +6,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.compose import ColumnTransformer
-from textblob import TextBlob
+from transformers import pipeline as hf_pipeline, AutoTokenizer, AutoModelForSequenceClassification
 import pandas as pd
 import numpy as np
 
@@ -43,6 +43,14 @@ def preprocess_text(text):
 
 # Feature transformer for advanced features
 class EnhancedFeatureTransformer(BaseEstimator, TransformerMixin):
+    def __init__(self):
+        # Load BERT model for sentiment analysis
+        self.sentiment_model = hf_pipeline(
+            "text-classification",
+            model=AutoModelForSequenceClassification.from_pretrained("nlptown/bert-base-multilingual-uncased-sentiment"),
+            tokenizer=AutoTokenizer.from_pretrained("nlptown/bert-base-multilingual-uncased-sentiment"),
+        )
+
     def fit(self, X, y=None):
         return self
 
@@ -58,17 +66,17 @@ class EnhancedFeatureTransformer(BaseEstimator, TransformerMixin):
         # Average word length
         features['avg_word_length'] = X['review'].apply(lambda x: np.mean([len(word) for word in x.split()]) if len(x.split()) > 0 else 0)
         
-        # Sentiment analysis
-        features['sentiment_polarity'], features['sentiment_subjectivity'] = zip(
-            *X['review'].apply(lambda x: extract_sentiment_features(x))
-        )
+        # Sentiment analysis using BERT
+        sentiment_scores = X['review'].apply(self.get_sentiment_score)
+        features['bert_sentiment'] = sentiment_scores.apply(lambda x: x['score'])
+        features['bert_sentiment_label'] = sentiment_scores.apply(lambda x: x['label'])
         
         return features
 
-# Function to extract sentiment features
-def extract_sentiment_features(text):
-    analysis = TextBlob(text)
-    return analysis.sentiment.polarity, analysis.sentiment.subjectivity
+    def get_sentiment_score(self, text):
+        # Use the BERT model to analyze sentiment
+        result = self.sentiment_model(text[:512])[0]  # Truncate to 512 tokens for BERT
+        return {"label": result['label'], "score": result['score']}
 
 # Load data and split into train/test
 df = load_and_preprocess_data()
@@ -87,7 +95,7 @@ preprocessor = ColumnTransformer(
 # Pipeline with feature extraction and model
 pipeline = Pipeline([
     ('preprocessor', preprocessor),
-    ('classifier', RandomForestClassifier(n_estimators=100, random_state=42))
+    ('classifier', RandomForestClassifier(n_estimators=200, random_state=42, max_depth=20))  # Increased depth
 ])
 
 # Train the model
