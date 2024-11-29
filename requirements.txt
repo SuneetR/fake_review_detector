@@ -5,3 +5,4 @@ textblob
 transformers
 torch
 scikit-learn
+gunicorn
