@@ -3,23 +3,27 @@ import nltk
 from sklearn.pipeline import Pipeline
 from sklearn.linear_model import LogisticRegression
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.preprocessing import FunctionTransformer
 from sklearn.compose import ColumnTransformer
+from sklearn.utils.class_weight import compute_class_weight
 import pandas as pd
 import numpy as np
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from textblob import TextBlob
 import spacy
+import joblib
 
 # Download necessary NLTK resources
 nltk.download('stopwords')
 nltk.download('wordnet')
 nltk.download('averaged_perceptron_tagger')
-nltk.download('punkt_tab')
-nlp = spacy.load("en_core_web_sm")
+nltk.download('punkt')
+
+# Load SpaCy model
+nlp = spacy.load("en_core_web_sm", disable=["parser", "tagger"])
 
 # Initialize NLTK components
 stop_words = set(stopwords.words('english'))
@@ -75,6 +79,10 @@ class AdvancedFeatureTransformer(BaseEstimator, TransformerMixin):
         # First-person pronoun frequency
         features['first_person_pronouns'] = X['review'].apply(lambda x: sum(1 for word in x.split() if word in ['i', 'me', 'my', 'mine', 'we', 'us', 'our', 'ours']))
 
+        # Emoji and exclamation marks
+        features['emoji_count'] = X['review'].apply(lambda x: sum(1 for char in x if char in ['�', '�', '❤', '☺']))
+        features['exclamation_count'] = X['review'].apply(lambda x: x.count('!'))
+
         return features
 
     @staticmethod
@@ -92,7 +100,9 @@ class AdvancedFeatureTransformer(BaseEstimator, TransformerMixin):
 df = load_and_preprocess_data()
 X = df[['review']]
 y = df['label']
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Stratified split to handle imbalanced data
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
 
 # Create a column transformer with both text vectorization and custom features
 preprocessor = ColumnTransformer(
@@ -105,15 +115,22 @@ preprocessor = ColumnTransformer(
 # Pipeline with feature extraction and model
 pipeline = Pipeline([
     ('preprocessor', preprocessor),
-    ('classifier', LogisticRegression(solver='liblinear', C=1.0, random_state=42))
+    ('classifier', LogisticRegression(solver='liblinear', C=1.0, random_state=42, class_weight='balanced'))
 ])
 
 # Train the model
 pipeline.fit(X_train, y_train)
 
+# Cross-validation scores
+scores = cross_val_score(pipeline, X_train, y_train, cv=5, scoring='accuracy')
+print(f"Average CV Accuracy: {np.mean(scores):.2f}")
+
+# Save the trained model
+joblib.dump(pipeline, 'fake_review_detector.pkl')
+
 # Prediction function
 def predict_review(review):
-    # Convert to DataFrame for compatibility with ColumnTransformer
+    pipeline = joblib.load('fake_review_detector.pkl')  # Load model
     X_input = pd.DataFrame({'review': [preprocess_text(review)]})
     prediction = pipeline.predict(X_input)[0]
     confidence = pipeline.predict_proba(X_input)[0].max() * 100
@@ -131,3 +148,6 @@ def update_model(new_review, new_label):
 
     # Retrain the model with updated data
     pipeline.fit(X_train, y_train)
+    joblib.dump(pipeline, 'fake_review_detector.pkl')  # Save updated model
+
+print("Model training complete and saved as 'fake_review_detector.pkl'.")
