@@ -4,4 +4,6 @@ scikit-learn
 pandas
 numpy
 nltk
+textblob
+spacy
 xgboost
