@@ -1,13 +1,14 @@
 Flask
 gunicorn
-scikit-learn
-pandas
-nltk
-textblob
-spacy
+spacy==3.7.4
 https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.6.0/en_core_web_sm-3.6.0.tar.gz
 xgboost
-numpy
-joblib
+numpy==1.24.3
+pandas==2.0.3
+scikit-learn==1.3.1
+nltk==3.8.1
+textblob==0.17.1
+joblib==1.3.2
+
 
 
