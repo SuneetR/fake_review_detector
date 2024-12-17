@@ -1,30 +1,29 @@
 import string
-import nltk
+import spacy
 from sklearn.pipeline import Pipeline
 from sklearn.linear_model import LogisticRegression
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.model_selection import train_test_split, GridSearchCV, cross_val_score
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.compose import ColumnTransformer
-from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
 from textblob import TextBlob
-import spacy
 import pandas as pd
 import numpy as np
 
-# Download necessary NLTK resources
-nltk.download('stopwords')
-nltk.download('wordnet')
-nltk.download('averaged_perceptron_tagger')
-nltk.download('punkt')
-
 # Load SpaCy model
-nlp = spacy.load("en_core_web_sm", disable=["parser", "tagger"])
+nlp = spacy.load("en_core_web_sm", disable=["parser", "ner"])
 
-# Initialize NLTK components
-stop_words = set(stopwords.words('english'))
-lemmatizer = WordNetLemmatizer()
+# Stopwords list
+STOPWORDS = set([
+    "i", "me", "my", "myself", "we", "our", "ours", "ourselves", "you", "your",
+    "yours", "yourself", "yourselves", "he", "him", "his", "himself", "she",
+    "her", "hers", "herself", "it", "its", "itself", "they", "them", "their",
+    "theirs", "themselves", "what", "which", "who", "whom", "this", "that",
+    "these", "those", "am", "is", "are", "was", "were", "be", "been", "being",
+    "have", "has", "had", "having", "do", "does", "did", "doing", "a", "an",
+    "the", "and", "but", "if", "or", "because", "as", "until", "while", "of",
+    "at", "by", "for", "with", "about", "against", "between", "into", "through"
+])
 
 # Load and preprocess the data from CSV
 def load_and_preprocess_data(file_path='reviews.csv'):
@@ -42,7 +41,7 @@ def load_and_preprocess_data(file_path='reviews.csv'):
 def preprocess_text(text):
     text = text.lower()
     text = ''.join([char for char in text if char not in string.punctuation])
-    text = ' '.join([lemmatizer.lemmatize(word) for word in text.split() if word not in stop_words])
+    text = ' '.join([word for word in text.split() if word not in STOPWORDS])
     return text
 
 # Advanced Feature Extraction class
@@ -60,10 +59,10 @@ class AdvancedFeatureTransformer(BaseEstimator, TransformerMixin):
         features['avg_word_length'] = X['review'].apply(lambda x: np.mean([len(word) for word in x.split()]) if x.split() else 0)
         
         # Stopword ratio
-        features['stopword_ratio'] = X['review'].apply(lambda x: sum(1 for word in x.split() if word in stop_words) / len(x.split()) if x.split() else 0)
+        features['stopword_ratio'] = X['review'].apply(lambda x: sum(1 for word in x.split() if word in STOPWORDS) / len(x.split()) if x.split() else 0)
         
         # Noun to Verb ratio
-        features['noun_verb_ratio'] = X['review'].apply(self.noun_verb_ratio)
+        features['noun_verb_ratio'] = X['review'].apply(self.calculate_noun_verb_ratio)
         
         # Sentiment polarity and subjectivity
         features['sentiment_polarity'] = X['review'].apply(lambda x: TextBlob(x).sentiment.polarity)
@@ -72,11 +71,10 @@ class AdvancedFeatureTransformer(BaseEstimator, TransformerMixin):
         return features
 
     @staticmethod
-    def noun_verb_ratio(text):
-        tokens = nltk.word_tokenize(text)
-        pos_tags = nltk.pos_tag(tokens)
-        nouns = sum(1 for _, tag in pos_tags if tag.startswith('NN'))
-        verbs = sum(1 for _, tag in pos_tags if tag.startswith('VB'))
+    def calculate_noun_verb_ratio(text):
+        doc = nlp(text)
+        nouns = sum(1 for token in doc if token.pos_ == 'NOUN')
+        verbs = sum(1 for token in doc if token.pos_ == 'VERB')
         return nouns / verbs if verbs > 0 else 0
 
 # Load data and split into train/test
@@ -115,7 +113,6 @@ print(f"Best Parameters: {grid_search.best_params_}")
 best_pipeline = grid_search.best_estimator_
 
 # Cross-validation score
-from sklearn.model_selection import cross_val_score
 scores = cross_val_score(best_pipeline, X_train, y_train, cv=5, scoring='accuracy')
 print(f"Improved CV Accuracy: {np.mean(scores):.2f}")
 
