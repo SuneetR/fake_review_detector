@@ -7,23 +7,19 @@ from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.preprocessing import FunctionTransformer
 from sklearn.compose import ColumnTransformer
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from sklearn.utils.class_weight import compute_class_weight
 import pandas as pd
 import numpy as np
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from textblob import TextBlob
-import spacy
-import joblib
 
 # Download necessary NLTK resources
 nltk.download('stopwords')
 nltk.download('wordnet')
 nltk.download('averaged_perceptron_tagger')
 nltk.download('punkt')
-
-# Load SpaCy model
-nlp = spacy.load("en_core_web_sm", disable=["parser", "tagger"])
 
 # Initialize NLTK components
 stop_words = set(stopwords.words('english'))
@@ -73,15 +69,11 @@ class AdvancedFeatureTransformer(BaseEstimator, TransformerMixin):
         features['sentiment_polarity'] = X['review'].apply(lambda x: TextBlob(x).sentiment.polarity)
         features['sentiment_subjectivity'] = X['review'].apply(lambda x: TextBlob(x).sentiment.subjectivity)
 
-        # Named entity count
-        features['named_entity_count'] = X['review'].apply(self.count_named_entities)
+        # Proper noun count (simplified named entity replacement)
+        features['proper_noun_count'] = X['review'].apply(self.count_proper_nouns)
 
-        # First-person pronoun frequency
-        features['first_person_pronouns'] = X['review'].apply(lambda x: sum(1 for word in x.split() if word in ['i', 'me', 'my', 'mine', 'we', 'us', 'our', 'ours']))
-
-        # Emoji and exclamation marks
-        features['emoji_count'] = X['review'].apply(lambda x: sum(1 for char in x if char in ['�', '�', '❤', '☺']))
-        features['exclamation_count'] = X['review'].apply(lambda x: x.count('!'))
+        # **Ensuring Detailed Reviews are Treated as True**
+        features['detailed_review_flag'] = X['review'].apply(lambda x: 1 if len(x.split()) > 50 else 0)
 
         return features
 
@@ -92,9 +84,10 @@ class AdvancedFeatureTransformer(BaseEstimator, TransformerMixin):
         return sum(1 for word, tag in pos_tags if tag.startswith('JJ'))
 
     @staticmethod
-    def count_named_entities(text):
-        doc = nlp(text)
-        return len([ent for ent in doc.ents])
+    def count_proper_nouns(text):
+        tokens = nltk.word_tokenize(text)
+        pos_tags = nltk.pos_tag(tokens)
+        return sum(1 for word, tag in pos_tags if tag == 'NNP')
 
 # Load data and split into train/test
 df = load_and_preprocess_data()
@@ -121,33 +114,14 @@ pipeline = Pipeline([
 # Train the model
 pipeline.fit(X_train, y_train)
 
-# Cross-validation scores
-scores = cross_val_score(pipeline, X_train, y_train, cv=5, scoring='accuracy')
-print(f"Average CV Accuracy: {np.mean(scores):.2f}")
+# Model evaluation
+y_pred = pipeline.predict(X_test)
+accuracy = accuracy_score(y_test, y_pred)
+precision = precision_score(y_test, y_pred)
+recall = recall_score(y_test, y_pred)
+f1 = f1_score(y_test, y_pred)
 
-# Save the trained model
-joblib.dump(pipeline, 'fake_review_detector.pkl')
-
-# Prediction function
-def predict_review(review):
-    pipeline = joblib.load('fake_review_detector.pkl')  # Load model
-    X_input = pd.DataFrame({'review': [preprocess_text(review)]})
-    prediction = pipeline.predict(X_input)[0]
-    confidence = pipeline.predict_proba(X_input)[0].max() * 100
-    result = 'True' if prediction == 1 else 'Fake'
-    return result, f"{confidence:.2f}%"
-
-# Function to update the model with new data
-def update_model(new_review, new_label):
-    global X_train, y_train
-
-    # Preprocess and append new data to training set
-    new_review_processed = preprocess_text(new_review)
-    X_train = pd.concat([X_train, pd.DataFrame({'review': [new_review_processed]})], ignore_index=True)
-    y_train = pd.concat([y_train, pd.Series([new_label])], ignore_index=True)
-
-    # Retrain the model with updated data
-    pipeline.fit(X_train, y_train)
-    joblib.dump(pipeline, 'fake_review_detector.pkl')  # Save updated model
-
-print("Model training complete and saved as 'fake_review_detector.pkl'.")
+print(f"Accuracy: {accuracy:.2f}")
+print(f"Precision: {precision:.2f}")
+print(f"Recall: {recall:.2f}")
+print(f"F1 Score: {f1:.2f}")
